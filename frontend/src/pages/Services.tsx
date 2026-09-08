@@ -1,19 +1,32 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { services, categoryFilters } from '../data/services'
 import { useAppState } from '../state/AppState'
-import { Button, FilterPills, Kicker, Placeholder } from '../components/ui'
+import { categoryLabel, serviceCategories } from '../data/seed'
+import { AppImage, Button, FilterPills, Kicker } from '../components/ui'
 import { formatPrice } from '../lib/format'
-import type { Service } from '../types'
+import type { ServiceCategoryId } from '../types'
+
+type Filter = 'todos' | ServiceCategoryId
 
 export default function Services() {
-  const [category, setCategory] = useState<'todos' | Service['category']>('todos')
-  const { setBookingDraft } = useAppState()
+  const { services, setBookingDraft } = useAppState()
+  const [category, setCategory] = useState<Filter>('todos')
   const navigate = useNavigate()
+
+  // Solo se ofrecen los filtros que tienen servicios en el catálogo.
+  const filters = useMemo(
+    () => [
+      { value: 'todos' as const, label: 'Todos' },
+      ...serviceCategories
+        .filter((c) => services.some((s) => s.category === c.id))
+        .map((c) => ({ value: c.id, label: c.label })),
+    ],
+    [services],
+  )
 
   const filtered = useMemo(
     () => (category === 'todos' ? services : services.filter((s) => s.category === category)),
-    [category],
+    [services, category],
   )
 
   function handleReservar(serviceId: string) {
@@ -30,20 +43,32 @@ export default function Services() {
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-        <FilterPills options={categoryFilters} value={category} onChange={setCategory} />
-        <span className="text-sm text-muted">{filtered.length} servicios</span>
+        <FilterPills options={filters} value={category} onChange={setCategory} />
+        <span className="text-sm text-muted">
+          {filtered.length} {filtered.length === 1 ? 'servicio' : 'servicios'}
+        </span>
       </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((s) => (
-          <div key={s.id} className="flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-paper">
+          <div
+            key={s.id}
+            className="flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-paper"
+          >
             <Link to={`/servicios/${s.id}`}>
-              <Placeholder label={s.name.split(' ')[0].toUpperCase()} className="aspect-[4/3] w-full" />
+              <AppImage
+                src={s.imageUrl}
+                label={s.name.split(' ')[0].toUpperCase()}
+                alt={s.name}
+                className="aspect-[4/3] w-full"
+              />
             </Link>
             <div className="flex flex-1 flex-col p-6">
-              <Kicker>{s.categoryLabel}</Kicker>
+              <Kicker>{categoryLabel(s.category)}</Kicker>
               <Link to={`/servicios/${s.id}`}>
-                <h3 className="mt-1 font-serif-display text-xl text-ink hover:text-olive-700">{s.name}</h3>
+                <h3 className="mt-1 font-serif-display text-xl text-ink hover:text-olive-700">
+                  {s.name}
+                </h3>
               </Link>
               <p className="mt-2 flex-1 text-sm text-muted">{s.shortDescription}</p>
               <div className="mt-4 flex items-center justify-between border-t border-line-soft pt-4 text-sm text-ink">
@@ -65,6 +90,12 @@ export default function Services() {
           </div>
         ))}
       </div>
+
+      {filtered.length === 0 && (
+        <p className="mt-10 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+          Todavía no hay servicios en esta categoría.
+        </p>
+      )}
     </div>
   )
 }

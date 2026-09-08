@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
-import { getServiceById } from '../data/services'
-import { getProfessionalById } from '../data/professionals'
 import { StatusBadge, UnderlineTabs } from '../components/ui'
 import { formatDayMonthShort, formatPrice } from '../lib/format'
 
@@ -15,7 +13,7 @@ const TABS: { value: Tab; label: string }[] = [
 ]
 
 export default function MyBookings() {
-  const { currentUser, bookings } = useAppState()
+  const { currentUser, bookings, getService, getProfessional } = useAppState()
   const [tab, setTab] = useState<Tab>('proximas')
 
   const mine = useMemo(
@@ -44,8 +42,8 @@ export default function MyBookings() {
           </p>
         )}
         {filtered.map((b) => {
-          const service = getServiceById(b.serviceId)
-          const professional = getProfessionalById(b.professionalId)
+          const service = getService(b.serviceId)
+          const professional = getProfessional(b.professionalId)
           const { day, month } = formatDayMonthShort(b.dateISO)
           return (
             <div
@@ -58,11 +56,12 @@ export default function MyBookings() {
               </div>
               <div className="min-w-[200px] flex-1">
                 <div className="flex items-center gap-3">
-                  <p className="font-medium text-ink">{service?.name}</p>
+                  <p className="font-medium text-ink">{service?.name ?? 'Servicio no disponible'}</p>
                   <StatusBadge status={b.status} />
                 </div>
                 <p className="mt-1 text-sm text-muted">
-                  {professional?.name} · {b.time} · {b.durationMin} min · {formatPrice(b.price)}
+                  {professional?.name ?? '—'} · {b.time} · {b.durationMin} min ·{' '}
+                  {formatPrice(b.price)}
                 </p>
               </div>
               <div className="flex gap-3">

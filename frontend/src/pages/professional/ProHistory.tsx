@@ -1,12 +1,11 @@
 import { useMemo } from 'react'
 import { useAppState } from '../../state/AppState'
-import { getServiceById } from '../../data/services'
 import { formatDayMonthShort } from '../../lib/format'
 import { StatusBadge } from '../../components/ui'
 
 export default function ProHistory() {
-  const { currentUser, bookings } = useAppState()
-  const professionalId = currentUser!.professionalId!
+  const { currentUser, bookings, getService } = useAppState()
+  const professionalId = currentUser?.professionalId ?? ''
 
   const mine = useMemo(
     () =>
@@ -33,13 +32,13 @@ export default function ProHistory() {
           </thead>
           <tbody className="divide-y divide-line-soft">
             {mine.map((b) => {
-              const service = getServiceById(b.serviceId)
+              const service = getService(b.serviceId)
               const { day, month } = formatDayMonthShort(b.dateISO)
               return (
                 <tr key={b.id}>
                   <td className="px-6 py-4 text-muted-light">{b.code.split('-').slice(-1)[0]}</td>
                   <td className="px-6 py-4 font-medium text-ink">{b.clientName}</td>
-                  <td className="px-6 py-4 text-ink">{service?.name}</td>
+                  <td className="px-6 py-4 text-ink">{service?.name ?? '—'}</td>
                   <td className="px-6 py-4 text-ink">
                     {day} {month} · {b.time}
                   </td>
@@ -49,6 +48,13 @@ export default function ProHistory() {
                 </tr>
               )
             })}
+            {mine.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-6 py-8 text-center text-sm text-muted">
+                  Todavía no tienes reservas registradas.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

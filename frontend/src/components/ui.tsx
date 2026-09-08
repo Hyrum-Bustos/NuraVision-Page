@@ -73,6 +73,41 @@ export function Placeholder({
   )
 }
 
+/**
+ * Muestra una imagen cargada desde el panel de administración y, mientras no
+ * exista, el marcador a rayas del diseño.
+ */
+export function AppImage({
+  src,
+  alt,
+  label,
+  variant = 'beige',
+  className = '',
+  imageClassName = '',
+}: {
+  src?: string
+  alt?: string
+  label?: string
+  variant?: 'beige' | 'lavender'
+  className?: string
+  imageClassName?: string
+}) {
+  if (!src) {
+    return <Placeholder label={label} variant={variant} className={className} />
+  }
+
+  return (
+    <div className={`overflow-hidden ${className}`}>
+      <img
+        src={src}
+        alt={alt ?? label ?? ''}
+        loading="lazy"
+        className={`h-full w-full object-cover ${imageClassName}`}
+      />
+    </div>
+  )
+}
+
 const statusStyles: Record<BookingStatus, string> = {
   confirmada: 'bg-olive-50 text-olive-700',
   en_curso: 'bg-lavender text-[#4a3a63]',

@@ -1,25 +1,16 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getProfessionalById } from '../data/professionals'
-import { getServiceById } from '../data/services'
-import { getSlotsForDate } from '../lib/availability'
 import { useAppState } from '../state/AppState'
-import { Kicker, Placeholder } from '../components/ui'
-import { formatPrice } from '../lib/format'
-
-const WEEK_DATES = [
-  { label: 'MAR', day: 1, iso: '2026-09-01' },
-  { label: 'MIÉ', day: 2, iso: '2026-09-02' },
-  { label: 'JUE', day: 3, iso: '2026-09-03' },
-  { label: 'VIE', day: 4, iso: '2026-09-04' },
-  { label: 'SÁB', day: 5, iso: '2026-09-05' },
-  { label: 'DOM', day: 6, iso: '2026-09-06' },
-]
+import { TODAY_ISO } from '../data/seed'
+import { getSlotsForDate } from '../lib/availability'
+import { AppImage, Kicker } from '../components/ui'
+import { formatPrice, getWeekDates, parseISODate, WEEKDAYS_SHORT } from '../lib/format'
 
 export default function ProfessionalDetail() {
   const { id } = useParams()
-  const professional = id ? getProfessionalById(id) : undefined
+  const { getProfessional, getService, bookings, setBookingDraft } = useAppState()
   const navigate = useNavigate()
-  const { setBookingDraft } = useAppState()
+
+  const professional = id ? getProfessional(id) : undefined
 
   if (!professional) {
     return (
@@ -31,6 +22,8 @@ export default function ProfessionalDetail() {
       </div>
     )
   }
+
+  const weekDates = getWeekDates(TODAY_ISO)
 
   function goToBooking(serviceId: string) {
     setBookingDraft(() => ({ serviceId, professionalId: professional!.id }))
@@ -44,7 +37,12 @@ export default function ProfessionalDetail() {
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_1.4fr]">
-        <Placeholder label="Retrato profesional" className="aspect-[3/4] w-full rounded-2xl" />
+        <AppImage
+          src={professional.imageUrl}
+          label="Retrato profesional"
+          alt={professional.name}
+          className="aspect-[3/4] w-full rounded-2xl"
+        />
 
         <div>
           <h1 className="font-serif-display text-4xl text-ink">{professional.name}</h1>
@@ -57,7 +55,7 @@ export default function ProfessionalDetail() {
             <Kicker>Servicios que realiza</Kicker>
             <div className="mt-3 divide-y divide-line-soft">
               {professional.serviceIds.map((serviceId) => {
-                const service = getServiceById(serviceId)
+                const service = getService(serviceId)
                 if (!service) return null
                 return (
                   <div key={serviceId} className="flex items-center justify-between py-3">
@@ -77,6 +75,9 @@ export default function ProfessionalDetail() {
                   </div>
                 )
               })}
+              {professional.serviceIds.length === 0 && (
+                <p className="py-3 text-sm text-muted">Sin servicios asignados por ahora.</p>
+              )}
             </div>
           </div>
 
@@ -93,17 +94,25 @@ export default function ProfessionalDetail() {
                 Ver agenda completa
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-              {WEEK_DATES.map((d) => {
-                const isSunday = d.label === 'DOM'
-                const slots = isSunday ? [] : getSlotsForDate(d.iso, professional.id).slice(2, 10)
-                const preview = slots.filter((s) => s.status !== 'fuera_horario').slice(0, 3)
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-7">
+              {weekDates.map((dateISO) => {
+                const date = parseISODate(dateISO)
+                const slots = getSlotsForDate(dateISO, professional, bookings)
+                const preview = slots
+                  .filter((s) => s.status === 'disponible' || s.status === 'reservado')
+                  .slice(0, 3)
+
                 return (
-                  <div key={d.iso} className="rounded-xl border border-line-soft p-3 text-center">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted">{d.label}</p>
-                    <p className="font-serif-display text-lg text-ink">{d.day}</p>
+                  <div key={dateISO} className="rounded-xl border border-line-soft p-3 text-center">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted">
+                      {WEEKDAYS_SHORT[date.getDay()]}
+                    </p>
+                    <p className="font-serif-display text-lg text-ink">{date.getDate()}</p>
                     <div className="mt-2 space-y-1">
-                      {isSunday && <p className="text-xs text-muted-light">Cerrado</p>}
+                      {slots.length === 0 && <p className="text-xs text-muted-light">Cerrado</p>}
+                      {slots.length > 0 && preview.length === 0 && (
+                        <p className="text-xs text-muted-light">Sin cupos</p>
+                      )}
                       {preview.map((s) => (
                         <p
                           key={s.time}

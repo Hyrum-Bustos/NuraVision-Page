@@ -1,28 +1,46 @@
 import { useAppState } from '../../state/AppState'
-import { getProfessionalById } from '../../data/professionals'
-import { getServiceById } from '../../data/services'
-import { Card, Kicker } from '../../components/ui'
+import { categoryLabel } from '../../data/seed'
+import { AppImage, Card, Kicker } from '../../components/ui'
 import { formatPrice } from '../../lib/format'
 
 export default function ProServices() {
-  const { currentUser } = useAppState()
-  const professional = getProfessionalById(currentUser!.professionalId!)!
+  const { currentUser, getProfessional, getService } = useAppState()
+  const professional = getProfessional(currentUser?.professionalId ?? '')
+
+  if (!professional) {
+    return (
+      <div className="mx-auto max-w-5xl px-8 py-10">
+        <p className="text-sm text-muted">No encontramos tu ficha de profesional.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
       <h1 className="font-serif-display text-4xl text-ink">Mis servicios</h1>
-      <p className="mt-2 text-sm text-muted">Servicios del catálogo que realizas actualmente.</p>
+      <p className="mt-2 text-sm text-muted">
+        Servicios del catálogo que realizas actualmente. La administración del estudio define
+        precios y duraciones.
+      </p>
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
         {professional.serviceIds.map((id) => {
-          const service = getServiceById(id)
+          const service = getService(id)
           if (!service) return null
           return (
-            <Card key={id} className="flex items-center justify-between p-5">
-              <div>
-                <Kicker>{service.categoryLabel}</Kicker>
+            <Card key={id} className="flex items-center gap-4 p-5">
+              <AppImage
+                src={service.imageUrl}
+                label={service.name.split(' ')[0].toUpperCase()}
+                alt={service.name}
+                className="h-16 w-16 shrink-0 rounded-xl"
+              />
+              <div className="flex-1">
+                <Kicker>{categoryLabel(service.category)}</Kicker>
                 <p className="mt-1 font-serif-display text-xl text-ink">{service.name}</p>
-                <p className="mt-1 text-sm text-muted">{service.durationMin} min · {formatPrice(service.price)}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {service.durationMin} min · {formatPrice(service.price)}
+                </p>
               </div>
               <span className="rounded-full bg-olive-50 px-3 py-1 text-xs font-medium text-olive-700">
                 Activo
@@ -31,6 +49,12 @@ export default function ProServices() {
           )
         })}
       </div>
+
+      {professional.serviceIds.length === 0 && (
+        <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+          Aún no tienes servicios asignados.
+        </p>
+      )}
     </div>
   )
 }

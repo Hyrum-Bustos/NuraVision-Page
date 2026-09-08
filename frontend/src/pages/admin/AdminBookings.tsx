@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { useAppState } from '../../state/AppState'
-import { professionals } from '../../data/professionals'
 import { BookingsTable } from '../../components/BookingsTable'
 import type { BookingStatus } from '../../types'
 
@@ -13,7 +12,7 @@ const STATUS_OPTIONS: { value: BookingStatus | 'todos'; label: string }[] = [
 ]
 
 export default function AdminBookings() {
-  const { bookings } = useAppState()
+  const { bookings, professionals } = useAppState()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'todos'>('todos')
   const [professionalFilter, setProfessionalFilter] = useState<'todos' | string>('todos')

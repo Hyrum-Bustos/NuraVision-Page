@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { services } from '../data/services'
-import { professionals } from '../data/professionals'
-import { Kicker, LinkButton, Placeholder } from '../components/ui'
+import { useAppState } from '../state/AppState'
+import { categoryLabel } from '../data/seed'
+import { AppImage, Kicker, LinkButton } from '../components/ui'
 import { formatPrice } from '../lib/format'
 
 const STEPS = [
@@ -28,6 +28,12 @@ const STEPS = [
 ]
 
 export default function Landing() {
+  const { services, professionals, siteContent, nextSlotsFor } = useAppState()
+
+  const featured = services.slice(0, 4)
+  const firstProfessional = professionals[0]
+  const nextSlot = firstProfessional ? nextSlotsFor(firstProfessional, { count: 1 })[0] : undefined
+
   return (
     <div>
       <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-2 md:items-center md:py-24">
@@ -50,19 +56,26 @@ export default function Landing() {
             </LinkButton>
           </div>
           <div className="mt-12 flex gap-10 border-t border-line-soft pt-8">
-            <Stat value="8" label="servicios" />
-            <Stat value="4" label="profesionales" />
+            <Stat value={String(services.length)} label="servicios" />
+            <Stat value={String(professionals.length)} label="profesionales" />
             <Stat value="24/7" label="agenda en línea" />
           </div>
         </div>
 
         <div className="relative">
-          <Placeholder label="Fotografía · Salón / interior" className="aspect-[4/5] w-full rounded-2xl" />
-          <div className="absolute bottom-6 left-6 w-56 rounded-xl border border-line-soft bg-paper p-4 shadow-sm">
-            <Kicker>Próxima hora libre</Kicker>
-            <p className="mt-2 text-sm font-medium text-ink">Camila Reyes</p>
-            <p className="text-sm text-muted">Hoy · 16:30</p>
-          </div>
+          <AppImage
+            src={siteContent.heroImage}
+            label={siteContent.heroCaption}
+            alt="Estudio Nura"
+            className="aspect-[4/5] w-full rounded-2xl"
+          />
+          {firstProfessional && nextSlot && (
+            <div className="absolute bottom-6 left-6 w-56 rounded-xl border border-line-soft bg-paper p-4 shadow-sm">
+              <Kicker>Próxima hora libre</Kicker>
+              <p className="mt-2 text-sm font-medium text-ink">{firstProfessional.name}</p>
+              <p className="text-sm text-muted">{nextSlot.label.replace(' ', ' · ')}</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -77,15 +90,20 @@ export default function Landing() {
           </Link>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {services.slice(0, 4).map((s) => (
+          {featured.map((s) => (
             <Link
               key={s.id}
               to={`/servicios/${s.id}`}
               className="group overflow-hidden rounded-2xl border border-line-soft bg-paper transition-shadow hover:shadow-md"
             >
-              <Placeholder label={s.name.split(' ')[0].toUpperCase()} className="aspect-square w-full" />
+              <AppImage
+                src={s.imageUrl}
+                label={s.name.split(' ')[0].toUpperCase()}
+                alt={s.name}
+                className="aspect-square w-full"
+              />
               <div className="p-5">
-                <Kicker>{s.categoryLabel}</Kicker>
+                <Kicker>{categoryLabel(s.category)}</Kicker>
                 <h3 className="mt-1 font-serif-display text-xl text-ink">{s.name}</h3>
                 <p className="mt-2 text-sm text-muted">
                   {s.durationMin} min · {formatPrice(s.price)}
@@ -97,8 +115,10 @@ export default function Landing() {
       </section>
 
       <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-2 md:items-center">
-        <Placeholder
-          label="Detalle · Manos y uñas"
+        <AppImage
+          src={siteContent.aiTeaserImage}
+          label={siteContent.aiTeaserCaption}
+          alt="Análisis con NuraVision IA"
           variant="lavender"
           className="aspect-square w-full rounded-2xl"
         />
@@ -113,14 +133,15 @@ export default function Landing() {
             podrían acompañarte.
           </p>
           <ul className="mt-6 space-y-2 text-sm text-ink">
-            {['Manos y uñas', 'Tono de piel', 'Cuero cabelludo', 'Recomendación de servicios del catálogo'].map(
-              (item) => (
-                <li key={item} className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-olive-600" />
-                  {item}
-                </li>
-              ),
-            )}
+            {[
+              ...siteContent.aiFocusOptions.map((option) => option.label),
+              'Recomendación de servicios del catálogo',
+            ].map((item) => (
+              <li key={item} className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-olive-600" />
+                {item}
+              </li>
+            ))}
           </ul>
           <div className="mt-6 rounded-xl bg-line-soft/60 px-5 py-4 text-sm text-muted">
             NuraVision entrega una orientación estética basada en análisis visual.{' '}
@@ -138,10 +159,7 @@ export default function Landing() {
           <Kicker className="text-white/50">Cómo funciona</Kicker>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, i) => (
-              <div
-                key={step.n}
-                className={`pl-6 ${i > 0 ? 'border-l border-white/15' : ''}`}
-              >
+              <div key={step.n} className={`pl-6 ${i > 0 ? 'border-l border-white/15' : ''}`}>
                 <p className="font-serif-display text-3xl text-white/30">{step.n}</p>
                 <h3 className="mt-3 text-lg font-medium text-white">{step.title}</h3>
                 <p className="mt-2 text-sm text-white/55">{step.desc}</p>
@@ -164,7 +182,12 @@ export default function Landing() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {professionals.map((p) => (
             <Link key={p.id} to={`/profesionales/${p.id}`} className="group">
-              <Placeholder label="Retrato" className="aspect-[3/4] w-full rounded-2xl" />
+              <AppImage
+                src={p.imageUrl}
+                label="Retrato"
+                alt={p.name}
+                className="aspect-[3/4] w-full rounded-2xl"
+              />
               <p className="mt-3 font-serif-display text-lg text-ink">{p.name}</p>
               <p className="text-sm text-muted">{p.role}</p>
             </Link>

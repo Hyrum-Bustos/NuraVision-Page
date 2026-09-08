@@ -1,17 +1,40 @@
-export type ServiceCategory = 'unas' | 'cabello' | 'piel' | 'diagnostico'
+export type ServiceCategoryId = 'unas' | 'cabello' | 'piel' | 'diagnostico'
+
+export interface ServiceCategory {
+  id: ServiceCategoryId
+  label: string
+}
 
 export interface Service {
   id: string
-  category: ServiceCategory
-  categoryLabel: string
+  category: ServiceCategoryId
   name: string
   shortDescription: string
   longDescription: string
   durationMin: number
   price: number
   includes: string[]
-  professionalIds: string[]
+  imageUrl?: string
 }
+
+/** 0 = domingo … 6 = sábado (mismo índice que Date.getDay). */
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6
+
+export interface AvailabilityBreak {
+  id: string
+  start: string
+  end: string
+  label: string
+}
+
+export interface DayAvailability {
+  enabled: boolean
+  start: string
+  end: string
+  breaks: AvailabilityBreak[]
+}
+
+export type WeeklyAvailability = Record<Weekday, DayAvailability>
 
 export interface Professional {
   id: string
@@ -21,7 +44,8 @@ export interface Professional {
   bio: string
   specialistBadge?: string
   serviceIds: string[]
-  nextSlots: string[]
+  imageUrl?: string
+  availability: WeeklyAvailability
 }
 
 export type BookingStatus = 'confirmada' | 'en_curso' | 'completada' | 'cancelada'
@@ -37,6 +61,33 @@ export interface Booking {
   durationMin: number
   price: number
   status: BookingStatus
+}
+
+export interface AiTip {
+  id: string
+  title: string
+  description: string
+  imageUrl?: string
+}
+
+export interface AiFocusOption {
+  id: string
+  label: string
+  /** Texto que se muestra al subir la fotografía ("Analizaremos …"). */
+  analysisLabel: string
+  recommendedServiceIds: string[]
+  tips: AiTip[]
+  /** Imagen de resultado del análisis. */
+  imageUrl?: string
+}
+
+export interface SiteContent {
+  heroImage?: string
+  heroCaption: string
+  aiTeaserImage?: string
+  aiTeaserCaption: string
+  loginImage?: string
+  aiFocusOptions: AiFocusOption[]
 }
 
 export type Role = 'cliente' | 'profesional' | 'administrador'
@@ -60,10 +111,23 @@ export interface BookingDraft {
   time?: string
 }
 
+export interface NextSlotsOptions {
+  count?: number
+  fromISO?: string
+}
+
 export type SlotStatus = 'disponible' | 'reservado' | 'bloqueado' | 'fuera_horario'
 
 export interface DayStatus {
   dateISO: string
   day: number
   status: 'con_cupos' | 'sin_cupos' | 'cerrado'
+}
+
+/** Datos editables del prototipo, persistidos en el navegador. */
+export interface AppData {
+  services: Service[]
+  professionals: Professional[]
+  bookings: Booking[]
+  siteContent: SiteContent
 }
