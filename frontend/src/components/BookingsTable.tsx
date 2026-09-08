@@ -1,10 +1,11 @@
-import { getServiceById } from '../data/services'
-import { getProfessionalById } from '../data/professionals'
+import { useAppState } from '../state/AppState'
 import { formatDayMonthShort } from '../lib/format'
 import { StatusBadge } from './ui'
 import type { Booking } from '../types'
 
 export function BookingsTable({ bookings }: { bookings: Booking[] }) {
+  const { getService, getProfessional } = useAppState()
+
   return (
     <div className="overflow-x-auto rounded-2xl border border-line-soft bg-paper">
       <table className="w-full min-w-[760px] text-left text-sm">
@@ -20,15 +21,15 @@ export function BookingsTable({ bookings }: { bookings: Booking[] }) {
         </thead>
         <tbody className="divide-y divide-line-soft">
           {bookings.map((b) => {
-            const service = getServiceById(b.serviceId)
-            const professional = getProfessionalById(b.professionalId)
+            const service = getService(b.serviceId)
+            const professional = getProfessional(b.professionalId)
             const { day, month } = formatDayMonthShort(b.dateISO)
             return (
               <tr key={b.id}>
                 <td className="px-6 py-4 text-muted-light">{b.code}</td>
                 <td className="px-6 py-4 font-medium text-ink">{b.clientName}</td>
-                <td className="px-6 py-4 text-ink">{service?.name}</td>
-                <td className="px-6 py-4 text-ink">{professional?.name}</td>
+                <td className="px-6 py-4 text-ink">{service?.name ?? '—'}</td>
+                <td className="px-6 py-4 text-ink">{professional?.name ?? '—'}</td>
                 <td className="px-6 py-4 text-ink">
                   {day} {month} · {b.time}
                 </td>

@@ -1,11 +1,12 @@
 import { monthlyBookingTrend, topServices } from '../../data/adminStats'
-import { services, categoryFilters } from '../../data/services'
+import { serviceCategories } from '../../data/seed'
+import { useAppState } from '../../state/AppState'
 import { Card } from '../../components/ui'
 
 export default function AdminAnalytics() {
+  const { services } = useAppState()
   const maxTrend = Math.max(...monthlyBookingTrend.map((m) => m.value))
   const maxServiceCount = Math.max(...topServices.map((s) => s.count))
-  const categories = categoryFilters.filter((c) => c.value !== 'todos')
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
@@ -51,10 +52,10 @@ export default function AdminAnalytics() {
         <Card className="p-6">
           <h2 className="font-serif-display text-2xl text-ink">Catálogo por categoría</h2>
           <div className="mt-6 space-y-4">
-            {categories.map((c) => {
-              const count = services.filter((s) => s.category === c.value).length
+            {serviceCategories.map((c) => {
+              const count = services.filter((s) => s.category === c.id).length
               return (
-                <div key={c.value} className="flex items-center justify-between text-sm">
+                <div key={c.id} className="flex items-center justify-between text-sm">
                   <span className="text-ink">{c.label}</span>
                   <span className="rounded-full bg-line-soft px-3 py-1 text-xs text-muted">
                     {count} servicios

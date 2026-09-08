@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react'
 import { useAppState } from '../../state/AppState'
-import { getProfessionalById } from '../../data/professionals'
-import { professionals } from '../../data/professionals'
 import { dashboardStats, monthlyBookingTrend, topServices } from '../../data/adminStats'
 import { BookingsTable } from '../../components/BookingsTable'
 import { Card, StatCard } from '../../components/ui'
@@ -16,7 +14,7 @@ const STATUS_OPTIONS: { value: BookingStatus | 'todos'; label: string }[] = [
 ]
 
 export default function AdminDashboard() {
-  const { bookings } = useAppState()
+  const { bookings, professionals } = useAppState()
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'todos'>('todos')
   const [professionalFilter, setProfessionalFilter] = useState<'todos' | string>('todos')
 
@@ -125,7 +123,7 @@ export default function AdminDashboard() {
               <option value="todos">Todos los profesionales</option>
               {professionals.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {getProfessionalById(p.id)?.name}
+                  {p.name}
                 </option>
               ))}
             </select>

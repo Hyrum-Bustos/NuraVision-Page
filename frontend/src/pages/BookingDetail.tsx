@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
-import { getServiceById } from '../data/services'
-import { getProfessionalById } from '../data/professionals'
 import { getMonthDays, getSlotsForDate } from '../lib/availability'
 import { Calendar } from '../components/Calendar'
 import { TimeSlotGrid } from '../components/TimeSlotGrid'
@@ -11,7 +9,8 @@ import { formatLongDate, formatPrice, monthLabel } from '../lib/format'
 
 export default function BookingDetail() {
   const { id } = useParams()
-  const { bookings, rescheduleBooking, updateBookingStatus } = useAppState()
+  const { bookings, rescheduleBooking, updateBookingStatus, getService, getProfessional } =
+    useAppState()
   const [rescheduling, setRescheduling] = useState(false)
   const [draftDate, setDraftDate] = useState<string | undefined>()
   const [draftTime, setDraftTime] = useState<string | undefined>()
@@ -30,8 +29,8 @@ export default function BookingDetail() {
     )
   }
 
-  const service = getServiceById(booking.serviceId)
-  const professional = getProfessionalById(booking.professionalId)
+  const service = getService(booking.serviceId)
+  const professional = getProfessional(booking.professionalId)
   const canManage = booking.status === 'confirmada' || booking.status === 'en_curso'
 
   return (
@@ -47,8 +46,8 @@ export default function BookingDetail() {
       <h1 className="mt-2 font-serif-display text-4xl text-ink">{service?.name}</h1>
 
       <div className="mt-6 divide-y divide-line-soft rounded-2xl border border-line-soft bg-paper">
-        <Row label="Servicio" value={service?.name ?? ''} />
-        <Row label="Profesional" value={professional?.name ?? ''} />
+        <Row label="Servicio" value={service?.name ?? '—'} />
+        <Row label="Profesional" value={professional?.name ?? '—'} />
         <Row label="Fecha" value={formatLongDate(booking.dateISO)} />
         <Row label="Hora" value={`${booking.time} h`} />
         <Row label="Duración" value={`${booking.durationMin} min`} />
@@ -64,7 +63,7 @@ export default function BookingDetail() {
         </p>
       </div>
 
-      {canManage && !rescheduling && (
+      {canManage && professional && !rescheduling && (
         <div className="mt-6 flex gap-4">
           <Button onClick={() => setRescheduling(true)}>Reprogramar</Button>
           <Button
@@ -80,13 +79,13 @@ export default function BookingDetail() {
         </div>
       )}
 
-      {canManage && rescheduling && (
+      {canManage && professional && rescheduling && (
         <div className="mt-8 rounded-2xl border border-line-soft bg-paper p-6">
           <h2 className="font-serif-display text-2xl text-ink">Elige nueva fecha y hora</h2>
           <div className="mt-6 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
             <Calendar
               monthLabel={monthLabel(calendarView.year, calendarView.month)}
-              days={getMonthDays(calendarView.year, calendarView.month)}
+              days={getMonthDays(calendarView.year, calendarView.month, professional, bookings)}
               selectedDateISO={draftDate}
               onSelectDate={(d) => {
                 setDraftDate(d)
@@ -106,7 +105,7 @@ export default function BookingDetail() {
             <div>
               {draftDate ? (
                 <TimeSlotGrid
-                  slots={getSlotsForDate(draftDate, booking.professionalId)}
+                  slots={getSlotsForDate(draftDate, professional, bookings)}
                   selectedTime={draftTime}
                   onSelect={setDraftTime}
                 />

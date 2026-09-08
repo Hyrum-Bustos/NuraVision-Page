@@ -1,36 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertTriangle, Upload } from 'lucide-react'
-import { services } from '../data/services'
-import { Button, FilterPills, Kicker, Placeholder } from '../components/ui'
+import { useAppState } from '../state/AppState'
+import { AppImage, Button, FilterPills, Kicker } from '../components/ui'
 import { useScrollToTopOnChange } from '../components/ScrollToTop'
 import { formatPrice } from '../lib/format'
 
-type Focus = 'manos' | 'piel' | 'cuero'
 type Step = 'prepare' | 'upload' | 'result'
 type SimulatedError = 'imagen_invalida' | 'servicio_caido' | null
 
-const FOCUS_OPTIONS: { value: Focus; label: string }[] = [
-  { value: 'manos', label: 'Manos y uñas' },
-  { value: 'piel', label: 'Tono de piel' },
-  { value: 'cuero', label: 'Cuero cabelludo' },
-]
-
-const TIPS = [
-  { title: 'Luz natural', desc: 'Cerca de una ventana, sin flash directo.' },
-  { title: 'Fondo neutro', desc: 'Una superficie lisa y clara funciona mejor.' },
-  { title: 'Encuadre completo', desc: 'Que se vean las cuatro uñas y el borde libre.' },
-  { title: 'Sin esmalte', desc: 'Si es posible, retíralo antes de fotografiar.' },
-]
-
-const FOCUS_RECOMMENDATIONS: Record<Focus, string[]> = {
-  manos: ['manicure-ritual-nura', 'unas-esculpidas', 'pedicure-spa'],
-  piel: ['limpieza-facial-profunda'],
-  cuero: ['diagnostico-capilar', 'tratamiento-capilar-reconstructivo'],
-}
-
 export default function AIAnalysis() {
-  const [focus, setFocus] = useState<Focus>('manos')
+  const { siteContent, services } = useAppState()
+  const focusOptions = siteContent.aiFocusOptions
+
+  const [focusId, setFocusId] = useState(focusOptions[0]?.id ?? '')
   const [step, setStep] = useState<Step>('prepare')
   const [simulatedError, setSimulatedError] = useState<SimulatedError>(null)
   const [analyzing, setAnalyzing] = useState(false)
@@ -38,7 +21,27 @@ export default function AIAnalysis() {
 
   useScrollToTopOnChange(step)
 
-  const recommended = services.filter((s) => FOCUS_RECOMMENDATIONS[focus].includes(s.id))
+  // El administrador puede eliminar la opción seleccionada mientras se navega.
+  useEffect(() => {
+    if (focusOptions.length > 0 && !focusOptions.some((o) => o.id === focusId)) {
+      setFocusId(focusOptions[0].id)
+    }
+  }, [focusOptions, focusId])
+
+  const focus = focusOptions.find((o) => o.id === focusId) ?? focusOptions[0]
+
+  if (!focus) {
+    return (
+      <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+        <h1 className="font-serif-display text-4xl text-ink">Análisis con IA</h1>
+        <p className="mt-3 text-sm text-muted">
+          El análisis no está disponible por ahora. Vuelve a intentarlo más tarde.
+        </p>
+      </div>
+    )
+  }
+
+  const recommended = services.filter((s) => focus.recommendedServiceIds.includes(s.id))
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-14">
@@ -68,22 +71,29 @@ export default function AIAnalysis() {
         <>
           <h1 className="mt-6 font-serif-display text-4xl text-ink">Prepara tu fotografía</h1>
           <p className="mt-3 max-w-xl text-base text-muted">
-            Una buena foto mejora mucho el resultado. Toma 30 segundos para revisar estas cuatro
-            cosas.
+            Una buena foto mejora mucho el resultado. Toma 30 segundos para revisar estas
+            recomendaciones.
           </p>
 
           <Kicker className="mt-8">¿Qué quieres analizar?</Kicker>
           <div className="mt-3">
-            <FilterPills options={FOCUS_OPTIONS} value={focus} onChange={setFocus} />
+            <FilterPills
+              options={focusOptions.map((o) => ({ value: o.id, label: o.label }))}
+              value={focus.id}
+              onChange={setFocusId}
+            />
           </div>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {TIPS.map((tip) => (
-              <div key={tip.title} className="overflow-hidden rounded-2xl border border-line-soft bg-paper">
-                <Placeholder className="aspect-square w-full" />
+            {focus.tips.map((tip) => (
+              <div
+                key={tip.id}
+                className="overflow-hidden rounded-2xl border border-line-soft bg-paper"
+              >
+                <AppImage src={tip.imageUrl} alt={tip.title} className="aspect-square w-full" />
                 <div className="p-4">
                   <p className="font-medium text-ink">{tip.title}</p>
-                  <p className="mt-1 text-sm text-muted">{tip.desc}</p>
+                  <p className="mt-1 text-sm text-muted">{tip.description}</p>
                 </div>
               </div>
             ))}
@@ -102,14 +112,14 @@ export default function AIAnalysis() {
 
       {step === 'upload' && (
         <>
-          <button onClick={() => setStep('prepare')} className="mt-6 text-sm text-muted hover:text-ink">
+          <button
+            onClick={() => setStep('prepare')}
+            className="mt-6 text-sm text-muted hover:text-ink"
+          >
             ← Cambiar enfoque
           </button>
           <h1 className="mt-2 font-serif-display text-4xl text-ink">Sube tu fotografía</h1>
-          <p className="mt-3 text-sm text-muted">
-            Analizaremos{' '}
-            {focus === 'manos' ? 'manos y uñas' : focus === 'piel' ? 'tono de piel' : 'cuero cabelludo'}.
-          </p>
+          <p className="mt-3 text-sm text-muted">Analizaremos {focus.analysisLabel}.</p>
 
           {simulatedError && (
             <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#e6c9c0] bg-danger-soft px-5 py-4 text-sm text-danger">
@@ -162,9 +172,11 @@ export default function AIAnalysis() {
           </p>
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-            <Placeholder
+            <AppImage
+              src={focus.imageUrl}
               variant="lavender"
-              label={FOCUS_OPTIONS.find((f) => f.value === focus)?.label}
+              label={focus.label}
+              alt={focus.label}
               className="aspect-square w-full rounded-2xl"
             />
             <div>
@@ -189,6 +201,11 @@ export default function AIAnalysis() {
                     </Link>
                   </div>
                 ))}
+                {recommended.length === 0 && (
+                  <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-muted">
+                    Sin servicios recomendados para este enfoque.
+                  </p>
+                )}
               </div>
 
               <div className="mt-6 rounded-xl bg-line-soft/60 px-5 py-4 text-sm text-muted">

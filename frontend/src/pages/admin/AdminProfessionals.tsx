@@ -1,9 +1,8 @@
 import { useAppState } from '../../state/AppState'
-import { professionals } from '../../data/professionals'
-import { Card, Placeholder } from '../../components/ui'
+import { AppImage, Card } from '../../components/ui'
 
 export default function AdminProfessionals() {
-  const { bookings } = useAppState()
+  const { bookings, professionals } = useAppState()
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
@@ -17,7 +16,12 @@ export default function AdminProfessionals() {
           ).length
           return (
             <Card key={p.id} className="flex gap-4 p-5">
-              <Placeholder label="Retrato" className="aspect-square w-20 shrink-0 rounded-xl" />
+              <AppImage
+                src={p.imageUrl}
+                label="Retrato"
+                alt={p.name}
+                className="aspect-square w-20 shrink-0 rounded-xl"
+              />
               <div>
                 <p className="font-serif-display text-xl text-ink">{p.name}</p>
                 <p className="text-sm text-muted">{p.role}</p>

@@ -1,15 +1,15 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getServiceById } from '../data/services'
-import { getProfessionalsForService } from '../data/professionals'
 import { useAppState } from '../state/AppState'
-import { Avatar, Button, Kicker, Placeholder } from '../components/ui'
+import { categoryLabel } from '../data/seed'
+import { AppImage, Avatar, Button, Kicker, Placeholder } from '../components/ui'
 import { formatPrice } from '../lib/format'
 
 export default function ServiceDetail() {
   const { id } = useParams()
-  const service = id ? getServiceById(id) : undefined
+  const { getService, professionalsForService, setBookingDraft, nextSlotsFor } = useAppState()
   const navigate = useNavigate()
-  const { setBookingDraft } = useAppState()
+
+  const service = id ? getService(id) : undefined
 
   if (!service) {
     return (
@@ -22,7 +22,8 @@ export default function ServiceDetail() {
     )
   }
 
-  const professionals = getProfessionalsForService(service.id)
+  const professionals = professionalsForService(service.id)
+  const nextSlots = professionals[0] ? nextSlotsFor(professionals[0], { count: 4 }) : []
 
   function handleReservar() {
     setBookingDraft(() => ({ serviceId: service!.id }))
@@ -37,42 +38,70 @@ export default function ServiceDetail() {
 
       <div className="mt-6 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
         <div>
-          <Placeholder label={service.name.split(' ')[0].toUpperCase()} className="aspect-[4/3] w-full rounded-2xl" />
+          <AppImage
+            src={service.imageUrl}
+            label={service.name.split(' ')[0].toUpperCase()}
+            alt={service.name}
+            className="aspect-[4/3] w-full rounded-2xl"
+          />
           <div className="mt-3 grid grid-cols-4 gap-3">
             {[0, 1, 2, 3].map((i) => (
               <Placeholder key={i} className="aspect-square w-full rounded-xl" />
             ))}
           </div>
 
-          <Kicker className="mt-8">{service.categoryLabel}</Kicker>
+          <Kicker className="mt-8">{categoryLabel(service.category)}</Kicker>
           <h1 className="mt-1 font-serif-display text-4xl text-ink">{service.name}</h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">{service.longDescription}</p>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">
+            {service.longDescription}
+          </p>
 
-          <div className="mt-8 border-t border-line-soft pt-6">
-            <Kicker>Incluye</Kicker>
-            <ul className="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
-              {service.includes.map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm text-ink">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-olive-600" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {service.includes.length > 0 && (
+            <div className="mt-8 border-t border-line-soft pt-6">
+              <Kicker>Incluye</Kicker>
+              <ul className="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
+                {service.includes.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-ink">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-olive-600" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="mt-8 border-t border-line-soft pt-6">
             <Kicker>Profesionales que lo realizan</Kicker>
-            <div className="mt-3 flex flex-wrap gap-4">
-              {professionals.map((p) => (
-                <Link key={p.id} to={`/profesionales/${p.id}`} className="flex items-center gap-3">
-                  <Avatar initials={p.name.split(' ').map((n) => n[0]).join('')} />
-                  <div>
-                    <p className="text-sm font-medium text-ink">{p.name}</p>
-                    <p className="text-xs text-muted">{p.role}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {professionals.length === 0 ? (
+              <p className="mt-3 text-sm text-muted">
+                Este servicio aún no tiene profesionales asignados.
+              </p>
+            ) : (
+              <div className="mt-3 flex flex-wrap gap-4">
+                {professionals.map((p) => (
+                  <Link key={p.id} to={`/profesionales/${p.id}`} className="flex items-center gap-3">
+                    {p.imageUrl ? (
+                      <AppImage
+                        src={p.imageUrl}
+                        alt={p.name}
+                        className="h-9 w-9 shrink-0 rounded-full"
+                      />
+                    ) : (
+                      <Avatar
+                        initials={p.name
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')}
+                      />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-ink">{p.name}</p>
+                      <p className="text-xs text-muted">{p.role}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -84,28 +113,32 @@ export default function ServiceDetail() {
 
           <div className="mt-5 space-y-3 border-t border-line-soft pt-5 text-sm">
             <Row label="Duración" value={`${service.durationMin} min`} />
-            <Row label="Categoría" value={service.categoryLabel} />
+            <Row label="Categoría" value={categoryLabel(service.category)} />
             <Row label="Modalidad" value="Presencial · Estudio Nura" />
           </div>
 
-          <div className="mt-5 border-t border-line-soft pt-5">
-            <Kicker>Próximas horas</Kicker>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {(professionals[0]?.nextSlots ?? []).map((slot) => (
-                <span
-                  key={slot}
-                  className="rounded-lg border border-line px-3 py-2 text-center text-sm text-ink"
-                >
-                  {slot}
-                </span>
-              ))}
+          {nextSlots.length > 0 && (
+            <div className="mt-5 border-t border-line-soft pt-5">
+              <Kicker>Próximas horas</Kicker>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {nextSlots.map((slot) => (
+                  <span
+                    key={`${slot.dateISO}-${slot.time}`}
+                    className="rounded-lg border border-line px-3 py-2 text-center text-sm text-ink"
+                  >
+                    {slot.label}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <Button full className="mt-6" onClick={handleReservar}>
             Reservar este servicio
           </Button>
-          <p className="mt-3 text-center text-xs text-muted">Cancelación gratuita hasta 12 h antes</p>
+          <p className="mt-3 text-center text-xs text-muted">
+            Cancelación gratuita hasta 12 h antes
+          </p>
         </div>
       </div>
     </div>
