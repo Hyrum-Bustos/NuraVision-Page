@@ -16,11 +16,14 @@ export default function Professionals() {
       <Kicker>Equipo</Kicker>
       <h1 className="mt-2 font-serif-display text-5xl text-ink">Profesionales</h1>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+      <div className="stagger mt-10 grid gap-6 lg:grid-cols-2">
         {professionals.map((p) => {
           const nextSlots = nextSlotsFor(p, { count: 3 })
           return (
-            <div key={p.id} className="flex gap-5 rounded-2xl border border-line-soft bg-paper p-6">
+            <div
+              key={p.id}
+              className="card-hover flex gap-5 rounded-2xl border border-line-soft bg-paper p-6"
+            >
               <AppImage
                 src={p.imageUrl}
                 label="Retrato"

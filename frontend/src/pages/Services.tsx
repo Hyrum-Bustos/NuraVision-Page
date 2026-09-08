@@ -49,11 +49,11 @@ export default function Services() {
         </span>
       </div>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div key={category} className="stagger mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((s) => (
           <div
             key={s.id}
-            className="flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-paper"
+            className="card-hover flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-paper"
           >
             <Link to={`/servicios/${s.id}`}>
               <AppImage

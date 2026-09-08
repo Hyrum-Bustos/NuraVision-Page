@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
 
 export interface NavItem {
@@ -19,6 +19,7 @@ export function DashboardShell({
 }) {
   const { currentUser, logout } = useAppState()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
 
   return (
     <div className="flex min-h-screen bg-ivory">
@@ -78,7 +79,7 @@ export function DashboardShell({
         )}
       </aside>
 
-      <div className="flex-1 overflow-x-hidden">
+      <div key={pathname} className="animate-fade-up flex-1 overflow-x-hidden">
         <Outlet />
       </div>
     </div>

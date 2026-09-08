@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
 import { categoryLabel } from '../data/seed'
 import { AppImage, Kicker, LinkButton } from '../components/ui'
+import { Reveal } from '../components/Reveal'
 import { formatPrice } from '../lib/format'
 
 const STEPS = [
@@ -37,7 +38,7 @@ export default function Landing() {
   return (
     <div>
       <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-2 md:items-center md:py-24">
-        <div>
+        <div className="animate-fade-up">
           <span className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-olive-700">
             <span className="h-1.5 w-1.5 rounded-full bg-olive-600" />
             Análisis visual con IA
@@ -62,7 +63,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="animate-fade-up relative [animation-delay:120ms]">
           <AppImage
             src={siteContent.heroImage}
             label={siteContent.heroCaption}
@@ -70,7 +71,7 @@ export default function Landing() {
             className="aspect-[4/5] w-full rounded-2xl"
           />
           {firstProfessional && nextSlot && (
-            <div className="absolute bottom-6 left-6 w-56 rounded-xl border border-line-soft bg-paper p-4 shadow-sm">
+            <div className="animate-fade-up absolute bottom-6 left-6 w-56 rounded-xl border border-line-soft bg-paper p-4 shadow-sm [animation-delay:320ms]">
               <Kicker>Próxima hora libre</Kicker>
               <p className="mt-2 text-sm font-medium text-ink">{firstProfessional.name}</p>
               <p className="text-sm text-muted">{nextSlot.label.replace(' ', ' · ')}</p>
@@ -79,22 +80,27 @@ export default function Landing() {
         </div>
       </section>
 
+      <Reveal>
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <Kicker>Servicios destacados</Kicker>
             <h2 className="mt-2 font-serif-display text-4xl text-ink">Cuidado que se nota</h2>
           </div>
-          <Link to="/servicios" className="text-sm font-medium text-ink hover:text-olive-700">
-            Ver catálogo completo →
+          <Link
+            to="/servicios"
+            className="group text-sm font-medium text-ink transition-colors hover:text-olive-700"
+          >
+            Ver catálogo completo{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
           </Link>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {featured.map((s) => (
             <Link
               key={s.id}
               to={`/servicios/${s.id}`}
-              className="group overflow-hidden rounded-2xl border border-line-soft bg-paper transition-shadow hover:shadow-md"
+              className="card-hover overflow-hidden rounded-2xl border border-line-soft bg-paper"
             >
               <AppImage
                 src={s.imageUrl}
@@ -113,7 +119,9 @@ export default function Landing() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-2 md:items-center">
         <AppImage
           src={siteContent.aiTeaserImage}
@@ -153,11 +161,13 @@ export default function Landing() {
           </LinkButton>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section className="bg-ink py-16 text-white">
         <div className="mx-auto max-w-6xl px-6">
           <Kicker className="text-white/50">Cómo funciona</Kicker>
-          <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="stagger mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, i) => (
               <div key={step.n} className={`pl-6 ${i > 0 ? 'border-l border-white/15' : ''}`}>
                 <p className="font-serif-display text-3xl text-white/30">{step.n}</p>
@@ -168,20 +178,26 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <Kicker>El equipo</Kicker>
             <h2 className="mt-2 font-serif-display text-4xl text-ink">Quién te atiende</h2>
           </div>
-          <Link to="/profesionales" className="text-sm font-medium text-ink hover:text-olive-700">
-            Ver profesionales →
+          <Link
+            to="/profesionales"
+            className="group text-sm font-medium text-ink transition-colors hover:text-olive-700"
+          >
+            Ver profesionales{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
           </Link>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {professionals.map((p) => (
-            <Link key={p.id} to={`/profesionales/${p.id}`} className="group">
+            <Link key={p.id} to={`/profesionales/${p.id}`} className="zoom-media group">
               <AppImage
                 src={p.imageUrl}
                 label="Retrato"
@@ -194,7 +210,9 @@ export default function Landing() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section className="mx-auto max-w-3xl px-6 py-20 text-center">
         <h2 className="font-serif-display text-4xl text-ink sm:text-5xl">Tu hora te está esperando</h2>
         <p className="mx-auto mt-4 max-w-md text-base text-muted">
@@ -204,6 +222,7 @@ export default function Landing() {
           Reservar ahora
         </LinkButton>
       </section>
+      </Reveal>
     </div>
   )
 }
