@@ -394,7 +394,7 @@ function TimeStep({
     <div>
       <BackLink label="Cambiar fecha" onClick={onBack} />
       <h1 className="font-serif-display text-4xl text-ink">Elige tu hora</h1>
-      <p className="mt-2 text-sm capitalize text-muted">
+      <p className="mt-2 text-sm text-muted first-letter:uppercase">
         {formatWeekdayLong(dateISO)} · {professional.name}
       </p>
 

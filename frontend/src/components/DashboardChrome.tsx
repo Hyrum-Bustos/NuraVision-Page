@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { LogOut, type LucideIcon } from 'lucide-react'
 import { useAppState } from '../state/AppState'
 
 export interface NavItem {
   to: string
   label: string
+  icon?: LucideIcon
   end?: boolean
 }
 
@@ -37,22 +39,41 @@ export function DashboardShell({
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `rounded-md border-l-2 px-3 py-2 text-sm transition-colors ${
-                  isActive
-                    ? 'border-olive-400 bg-white/[0.06] font-medium text-white'
-                    : 'border-transparent text-white/55 hover:text-white/85'
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ${
+                    isActive
+                      ? 'bg-white/10 font-medium text-white'
+                      : 'text-white/55 hover:bg-white/5 hover:text-white/90'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-olive-400 transition-all duration-200 ${
+                        isActive ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    />
+                    {Icon && (
+                      <Icon
+                        className={`h-4 w-4 shrink-0 transition-colors ${
+                          isActive ? 'text-olive-400' : 'text-white/40 group-hover:text-white/70'
+                        }`}
+                      />
+                    )}
+                    {item.label}
+                  </>
+                )}
+              </NavLink>
+            )
+          })}
         </nav>
 
         {currentUser && (
@@ -61,9 +82,9 @@ export function DashboardShell({
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-white">
                 {currentUser.initials}
               </div>
-              <div>
-                <p className="text-sm font-medium text-white">{currentUser.name}</p>
-                <p className="text-xs text-white/45">{userSubtitle}</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-white">{currentUser.name}</p>
+                <p className="truncate text-xs text-white/45">{userSubtitle}</p>
               </div>
             </div>
             <button
@@ -71,8 +92,9 @@ export function DashboardShell({
                 logout()
                 navigate('/')
               }}
-              className="mt-4 text-xs text-white/45 hover:text-white/80"
+              className="mt-4 inline-flex items-center gap-1.5 text-xs text-white/45 transition-colors hover:text-white/80"
             >
+              <LogOut className="h-3.5 w-3.5" />
               Cerrar sesión
             </button>
           </div>

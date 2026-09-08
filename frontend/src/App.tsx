@@ -1,8 +1,21 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import {
+  BarChart3,
+  CalendarDays,
+  ClipboardList,
+  Clock,
+  Home,
+  Image as ImageIcon,
+  LayoutDashboard,
+  Settings,
+  Sparkles,
+  UserCircle,
+  Users,
+} from 'lucide-react'
 import { AppStateProvider } from './state/AppState'
 import { ToastProvider } from './state/Toast'
 import { ClientLayout } from './components/ClientChrome'
-import { DashboardShell } from './components/DashboardChrome'
+import { DashboardShell, type NavItem } from './components/DashboardChrome'
 import { RequireRole } from './components/RequireRole'
 import { ScrollToTop } from './components/ScrollToTop'
 
@@ -35,24 +48,24 @@ import AdminContent from './pages/admin/AdminContent'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminSettings from './pages/admin/AdminSettings'
 
-const PROFESSIONAL_NAV = [
-  { to: '/profesional', label: 'Inicio', end: true },
-  { to: '/profesional/agenda', label: 'Mi agenda' },
-  { to: '/profesional/reservas', label: 'Reservas' },
-  { to: '/profesional/disponibilidad', label: 'Disponibilidad' },
-  { to: '/profesional/servicios', label: 'Servicios' },
-  { to: '/profesional/perfil', label: 'Perfil' },
+const PROFESSIONAL_NAV: NavItem[] = [
+  { to: '/profesional', label: 'Inicio', icon: Home, end: true },
+  { to: '/profesional/agenda', label: 'Mi agenda', icon: CalendarDays },
+  { to: '/profesional/reservas', label: 'Reservas', icon: ClipboardList },
+  { to: '/profesional/disponibilidad', label: 'Disponibilidad', icon: Clock },
+  { to: '/profesional/servicios', label: 'Servicios', icon: Sparkles },
+  { to: '/profesional/perfil', label: 'Perfil', icon: UserCircle },
 ]
 
-const ADMIN_NAV = [
-  { to: '/admin', label: 'Dashboard', end: true },
-  { to: '/admin/reservas', label: 'Reservas' },
-  { to: '/admin/clientes', label: 'Clientes' },
-  { to: '/admin/profesionales', label: 'Profesionales' },
-  { to: '/admin/servicios', label: 'Servicios' },
-  { to: '/admin/contenido', label: 'Contenido' },
-  { to: '/admin/analitica', label: 'Analítica' },
-  { to: '/admin/configuracion', label: 'Configuración' },
+const ADMIN_NAV: NavItem[] = [
+  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/reservas', label: 'Reservas', icon: ClipboardList },
+  { to: '/admin/clientes', label: 'Clientes', icon: Users },
+  { to: '/admin/profesionales', label: 'Profesionales', icon: UserCircle },
+  { to: '/admin/servicios', label: 'Servicios', icon: Sparkles },
+  { to: '/admin/contenido', label: 'Contenido', icon: ImageIcon },
+  { to: '/admin/analitica', label: 'Analítica', icon: BarChart3 },
+  { to: '/admin/configuracion', label: 'Configuración', icon: Settings },
 ]
 
 export default function App() {

@@ -147,6 +147,20 @@ export default function AIAnalysis() {
             />
           </label>
 
+          {analyzing && (
+            <div className="mt-8 rounded-2xl border border-line-soft bg-paper p-6">
+              <p className="text-sm font-medium text-ink">Analizando tu fotografía…</p>
+              <p className="mt-1 text-xs text-muted">
+                Estamos identificando características visuales.
+              </p>
+              <div className="mt-4 space-y-2">
+                <div className="animate-shimmer h-3 w-3/4 rounded-full" />
+                <div className="animate-shimmer h-3 w-1/2 rounded-full" />
+                <div className="animate-shimmer h-3 w-2/3 rounded-full" />
+              </div>
+            </div>
+          )}
+
           <Button
             className="mt-8"
             disabled={!fileName || !!simulatedError || analyzing}
@@ -155,7 +169,7 @@ export default function AIAnalysis() {
               setTimeout(() => {
                 setAnalyzing(false)
                 setStep('result')
-              }, 1100)
+              }, 1400)
             }}
           >
             {analyzing ? 'Analizando…' : 'Analizar fotografía'}

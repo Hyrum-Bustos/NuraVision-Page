@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { CalendarCheck, Clock, TrendingDown, Users } from 'lucide-react'
 import { useAppState } from '../../state/AppState'
 import { dashboardStats, monthlyBookingTrend, topServices } from '../../data/adminStats'
 import { BookingsTable } from '../../components/BookingsTable'
@@ -40,23 +41,27 @@ export default function AdminDashboard() {
           value={String(dashboardStats.reservasDelMes.value)}
           caption={dashboardStats.reservasDelMes.delta}
           captionTone="positive"
+          icon={CalendarCheck}
         />
         <StatCard
           label="Reservas hoy"
           value={String(dashboardStats.reservasHoy.value)}
           caption={dashboardStats.reservasHoy.caption}
+          icon={Clock}
         />
         <StatCard
           label="Clientes registrados"
           value={dashboardStats.clientesRegistrados.value.toLocaleString('es-CL')}
           caption={dashboardStats.clientesRegistrados.delta}
           captionTone="positive"
+          icon={Users}
         />
         <StatCard
           label="Tasa de cancelación"
           value={dashboardStats.tasaCancelacion.value}
           caption={dashboardStats.tasaCancelacion.delta}
           captionTone="negative"
+          icon={TrendingDown}
         />
       </div>
 
@@ -66,14 +71,22 @@ export default function AdminDashboard() {
             <h2 className="font-serif-display text-2xl text-ink">Evolución de reservas</h2>
             <span className="text-sm text-muted">Marzo - septiembre</span>
           </div>
-          <div className="mt-8 flex h-48 items-end gap-4">
-            {monthlyBookingTrend.map((m) => (
-              <div key={m.label} className="flex flex-1 flex-col items-center gap-2">
-                <div
-                  className="w-full rounded-t-md bg-olive-100"
-                  style={{ height: `${(m.value / maxTrend) * 100}%` }}
-                />
-                <span className="text-xs text-muted">{m.label}</span>
+          {/* La fila no usa items-end: cada columna debe estirarse para que la
+              altura porcentual de la barra tenga una referencia definida. */}
+          <div className="mt-8 flex h-52 gap-4">
+            {monthlyBookingTrend.map((m, i) => (
+              <div key={m.label} className="group flex flex-1 flex-col">
+                <div className="flex flex-1 items-end">
+                  <div
+                    title={`${m.label}: ${m.value} reservas`}
+                    className="animate-grow-bar w-full rounded-t-md bg-olive-100 transition-colors group-hover:bg-olive-400"
+                    style={{
+                      height: `${(m.value / maxTrend) * 100}%`,
+                      animationDelay: `${i * 60}ms`,
+                    }}
+                  />
+                </div>
+                <span className="mt-2 text-center text-xs text-muted">{m.label}</span>
               </div>
             ))}
           </div>
@@ -82,16 +95,19 @@ export default function AdminDashboard() {
         <Card className="p-6">
           <h2 className="font-serif-display text-2xl text-ink">Servicios más solicitados</h2>
           <div className="mt-6 space-y-4">
-            {topServices.map((s) => (
+            {topServices.map((s, i) => (
               <div key={s.name}>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-ink">{s.name}</span>
                   <span className="text-ink">{s.count}</span>
                 </div>
-                <div className="mt-1.5 h-1.5 w-full rounded-full bg-line-soft">
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-line-soft">
                   <div
-                    className="h-1.5 rounded-full bg-olive-600"
-                    style={{ width: `${(s.count / maxServiceCount) * 100}%` }}
+                    className="animate-grow-width h-1.5 rounded-full bg-olive-600"
+                    style={{
+                      width: `${(s.count / maxServiceCount) * 100}%`,
+                      animationDelay: `${i * 80}ms`,
+                    }}
                   />
                 </div>
               </div>
