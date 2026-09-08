@@ -1,6 +1,6 @@
 import { Plus, X } from 'lucide-react'
-import { createId } from '../state/AppState'
-import { timeToMinutes } from '../lib/availability'
+import { createId } from '../lib/id'
+import { minutesToTime, timeToMinutes } from '../lib/availability'
 import type { DayAvailability, Weekday, WeeklyAvailability } from '../types'
 
 /** Lunes primero, como se lee un horario. */
@@ -13,6 +13,71 @@ const WEEK_ORDER: { weekday: Weekday; label: string }[] = [
   { weekday: 6, label: 'Sábado' },
   { weekday: 0, label: 'Domingo' },
 ]
+
+/**
+ * Horas en pasos de 30 minutos, la misma granularidad que usa la agenda.
+ * Se usa un select en vez de <input type="time"> porque este último se
+ * muestra en formato AM/PM según el idioma del navegador.
+ */
+const TIME_OPTIONS = Array.from({ length: (22 - 6) * 2 + 1 }, (_, i) => minutesToTime(6 * 60 + i * 30))
+
+function TimeSelect({
+  value,
+  onChange,
+  label,
+}: {
+  value: string
+  onChange: (value: string) => void
+  label: string
+}) {
+  return (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="rounded-lg border border-line bg-ivory px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-ink"
+    >
+      {/* Si el horario guardado no cae en la grilla, se conserva como opción. */}
+      {!TIME_OPTIONS.includes(value) && <option value={value}>{value}</option>}
+      {TIME_OPTIONS.map((time) => (
+        <option key={time} value={time}>
+          {time}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean
+  onChange: () => void
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onChange}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+        checked ? 'bg-olive-600' : 'bg-line'
+      }`}
+    >
+      {/* left-0.5 explícito: los <button> centran su contenido y la perilla
+          absoluta partiría desde el centro, saliéndose del riel. */}
+      <span
+        className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+          checked ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  )
+}
 
 export function AvailabilityEditor({
   value,
@@ -34,38 +99,25 @@ export function AvailabilityEditor({
         return (
           <div key={weekday} className="p-5">
             <div className="flex flex-wrap items-center gap-4">
-              <button
-                type="button"
-                role="switch"
-                aria-checked={day.enabled}
-                aria-label={`${label}: ${day.enabled ? 'atiende' : 'día libre'}`}
-                onClick={() => updateDay(weekday, { enabled: !day.enabled })}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                  day.enabled ? 'bg-olive-600' : 'bg-line'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                    day.enabled ? 'translate-x-5' : 'translate-x-0.5'
-                  }`}
-                />
-              </button>
+              <Toggle
+                checked={day.enabled}
+                onChange={() => updateDay(weekday, { enabled: !day.enabled })}
+                label={`${label}: ${day.enabled ? 'atiende' : 'día libre'}`}
+              />
               <span className="w-24 font-medium text-ink">{label}</span>
 
               {day.enabled ? (
                 <>
-                  <input
-                    type="time"
+                  <TimeSelect
+                    label={`Hora de inicio, ${label}`}
                     value={day.start}
-                    onChange={(e) => updateDay(weekday, { start: e.target.value })}
-                    className="rounded-lg border border-line bg-ivory px-3 py-2 text-sm text-ink"
+                    onChange={(start) => updateDay(weekday, { start })}
                   />
                   <span className="text-sm text-muted">a</span>
-                  <input
-                    type="time"
+                  <TimeSelect
+                    label={`Hora de término, ${label}`}
                     value={day.end}
-                    onChange={(e) => updateDay(weekday, { end: e.target.value })}
-                    className="rounded-lg border border-line bg-ivory px-3 py-2 text-sm text-ink"
+                    onChange={(end) => updateDay(weekday, { end })}
                   />
                   <button
                     type="button"
@@ -77,7 +129,7 @@ export function AvailabilityEditor({
                         ],
                       })
                     }
-                    className="ml-auto inline-flex items-center gap-1 rounded-full border border-dashed border-line px-3 py-1.5 text-xs text-muted hover:border-ink hover:text-ink"
+                    className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-dashed border-line px-3 py-1.5 text-xs text-muted transition-colors hover:border-ink hover:text-ink"
                   >
                     <Plus className="h-3 w-3" />
                     Bloquear tramo
@@ -91,16 +143,18 @@ export function AvailabilityEditor({
             </div>
 
             {invalidRange && (
-              <p className="mt-2 pl-[6.5rem] text-xs text-danger">
+              <p className="mt-2 text-xs text-danger sm:pl-[6.5rem]">
                 La hora de término debe ser posterior a la de inicio.
               </p>
             )}
 
             {day.enabled && day.breaks.length > 0 && (
-              <div className="mt-3 space-y-2 pl-[6.5rem]">
+              <div className="mt-3 space-y-2 sm:pl-[6.5rem]">
                 {day.breaks.map((brk) => (
                   <div key={brk.id} className="flex flex-wrap items-center gap-2">
                     <input
+                      type="text"
+                      aria-label={`Motivo del tramo bloqueado, ${label}`}
                       value={brk.label}
                       onChange={(e) =>
                         updateDay(weekday, {
@@ -110,32 +164,26 @@ export function AvailabilityEditor({
                         })
                       }
                       placeholder="Motivo"
-                      className="w-36 rounded-lg border border-line bg-ivory px-3 py-1.5 text-xs text-ink"
+                      className="w-36 rounded-lg border border-line bg-ivory px-3 py-1.5 text-xs text-ink outline-none focus:border-ink"
                     />
-                    <input
-                      type="time"
+                    <TimeSelect
+                      label={`Inicio del tramo bloqueado, ${label}`}
                       value={brk.start}
-                      onChange={(e) =>
+                      onChange={(start) =>
                         updateDay(weekday, {
-                          breaks: day.breaks.map((b) =>
-                            b.id === brk.id ? { ...b, start: e.target.value } : b,
-                          ),
+                          breaks: day.breaks.map((b) => (b.id === brk.id ? { ...b, start } : b)),
                         })
                       }
-                      className="rounded-lg border border-line bg-ivory px-3 py-1.5 text-xs text-ink"
                     />
                     <span className="text-xs text-muted">a</span>
-                    <input
-                      type="time"
+                    <TimeSelect
+                      label={`Término del tramo bloqueado, ${label}`}
                       value={brk.end}
-                      onChange={(e) =>
+                      onChange={(end) =>
                         updateDay(weekday, {
-                          breaks: day.breaks.map((b) =>
-                            b.id === brk.id ? { ...b, end: e.target.value } : b,
-                          ),
+                          breaks: day.breaks.map((b) => (b.id === brk.id ? { ...b, end } : b)),
                         })
                       }
-                      className="rounded-lg border border-line bg-ivory px-3 py-1.5 text-xs text-ink"
                     />
                     <button
                       type="button"
@@ -143,7 +191,7 @@ export function AvailabilityEditor({
                       onClick={() =>
                         updateDay(weekday, { breaks: day.breaks.filter((b) => b.id !== brk.id) })
                       }
-                      className="rounded-full p-1 text-muted hover:bg-danger-soft hover:text-danger"
+                      className="rounded-full p-1 text-muted transition-colors hover:bg-danger-soft hover:text-danger"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>

@@ -21,6 +21,7 @@ import type {
 } from '../types'
 import { createSeedData } from '../data/seed'
 import { clearStoredData, loadStoredData, saveStoredData } from '../lib/storage'
+import { createId } from '../lib/id'
 import { getNextAvailableSlots, type NextSlot } from '../lib/availability'
 
 const DEMO_USERS: Record<Role, CurrentUser> = {
@@ -53,14 +54,6 @@ const DEMO_USERS: Record<Role, CurrentUser> = {
     phone: '+56 9 5566 7788',
     initials: 'PN',
   },
-}
-
-export function createId(prefix: string): string {
-  const random =
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID().slice(0, 8)
-      : Math.random().toString(36).slice(2, 10)
-  return `${prefix}-${random}`
 }
 
 interface AppStateValue {
