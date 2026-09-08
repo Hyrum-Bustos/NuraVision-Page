@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertTriangle, Upload } from 'lucide-react'
 import { useAppState } from '../state/AppState'
@@ -21,13 +21,8 @@ export default function AIAnalysis() {
 
   useScrollToTopOnChange(step)
 
-  // El administrador puede eliminar la opción seleccionada mientras se navega.
-  useEffect(() => {
-    if (focusOptions.length > 0 && !focusOptions.some((o) => o.id === focusId)) {
-      setFocusId(focusOptions[0].id)
-    }
-  }, [focusOptions, focusId])
-
+  // Se resuelve en el render: si el administrador elimina la opción elegida,
+  // se cae de vuelta a la primera sin necesidad de sincronizar el estado.
   const focus = focusOptions.find((o) => o.id === focusId) ?? focusOptions[0]
 
   if (!focus) {

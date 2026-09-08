@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
+import { useToast } from '../state/Toast'
 import { categoryLabel } from '../data/seed'
 import { getMonthDays, getSlotsForDate } from '../lib/availability'
 import { Stepper } from '../components/Stepper'
@@ -33,14 +34,28 @@ export default function BookingFlow() {
     nextSlotsFor,
   } = useAppState()
   const navigate = useNavigate()
+  const { toast } = useToast()
   const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null)
 
+  // El aviso se emite una sola vez: en desarrollo StrictMode monta el efecto
+  // dos veces y, sin esta guarda, el toast aparecía duplicado.
+  const notifiedRef = useRef(false)
+
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'cliente') {
+      if (!notifiedRef.current) {
+        notifiedRef.current = true
+        // Sin el aviso, el rebote al login parece un error de la aplicación.
+        toast({
+          title: 'Inicia sesión para reservar',
+          description: 'Necesitamos identificarte para confirmar tu hora.',
+          tone: 'info',
+        })
+      }
       navigate('/login')
     }
-  }, [currentUser, navigate])
+  }, [currentUser, navigate, toast])
 
   const step: Step = !bookingDraft.serviceId
     ? 'service'
