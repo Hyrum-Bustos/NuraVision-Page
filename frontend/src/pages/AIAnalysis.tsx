@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AlertTriangle, Upload } from 'lucide-react'
 import { services } from '../data/services'
 import { Button, FilterPills, Kicker, Placeholder } from '../components/ui'
+import { useScrollToTopOnChange } from '../components/ScrollToTop'
 import { formatPrice } from '../lib/format'
 
 type Focus = 'manos' | 'piel' | 'cuero'
@@ -34,6 +35,8 @@ export default function AIAnalysis() {
   const [simulatedError, setSimulatedError] = useState<SimulatedError>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
+
+  useScrollToTopOnChange(step)
 
   const recommended = services.filter((s) => FOCUS_RECOMMENDATIONS[focus].includes(s.id))
 

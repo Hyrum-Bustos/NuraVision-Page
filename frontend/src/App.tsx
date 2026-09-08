@@ -3,6 +3,7 @@ import { AppStateProvider } from './state/AppState'
 import { ClientLayout } from './components/ClientChrome'
 import { DashboardShell } from './components/DashboardChrome'
 import { RequireRole } from './components/RequireRole'
+import { ScrollToTop } from './components/ScrollToTop'
 
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -55,6 +56,7 @@ export default function App() {
   return (
     <AppStateProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="login" element={<Login />} />
           <Route path="registro" element={<Register />} />
