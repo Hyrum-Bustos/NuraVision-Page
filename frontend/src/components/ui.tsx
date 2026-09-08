@@ -7,9 +7,12 @@ type Variant = 'solid' | 'olive' | 'outline' | 'danger-outline'
 const variantClasses: Record<Variant, string> = {
   solid: 'bg-ink text-white hover:bg-ink-soft',
   olive: 'bg-olive-600 text-white hover:bg-olive-700',
-  outline: 'border border-line text-ink bg-paper hover:bg-ivory',
+  outline: 'border border-line text-ink bg-paper hover:bg-ivory hover:border-muted-light',
   'danger-outline': 'border border-[#e6c9c0] text-danger bg-paper hover:bg-danger-soft',
 }
+
+const baseButtonClasses =
+  'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-[background-color,border-color,color,transform,box-shadow] duration-200 active:scale-[0.98]'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
@@ -20,7 +23,7 @@ export function Button({ variant = 'solid', full, className = '', disabled, ...p
   return (
     <button
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`${baseButtonClasses} disabled:pointer-events-none disabled:opacity-40 ${
         full ? 'w-full' : ''
       } ${variantClasses[variant]} ${className}`}
       {...props}
@@ -36,10 +39,7 @@ interface LinkButtonProps extends LinkProps {
 
 export function LinkButton({ variant = 'solid', className = '', ...props }: LinkButtonProps) {
   return (
-    <Link
-      className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-colors ${variantClasses[variant]} ${className}`}
-      {...props}
-    />
+    <Link className={`${baseButtonClasses} ${variantClasses[variant]} ${className}`} {...props} />
   )
 }
 
@@ -97,7 +97,7 @@ export function AppImage({
   }
 
   return (
-    <div className={`overflow-hidden ${className}`}>
+    <div className={`zoom-media overflow-hidden ${className}`}>
       <img
         src={src}
         alt={alt ?? label ?? ''}
@@ -138,9 +138,21 @@ export function Tag({ children, className = '' }: { children: ReactNode; classNa
   )
 }
 
-export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
+export function Card({
+  children,
+  className = '',
+  hover = false,
+}: {
+  children: ReactNode
+  className?: string
+  hover?: boolean
+}) {
   return (
-    <div className={`rounded-2xl border border-line-soft bg-paper ${className}`}>{children}</div>
+    <div
+      className={`rounded-2xl border border-line-soft bg-paper ${hover ? 'card-hover' : ''} ${className}`}
+    >
+      {children}
+    </div>
   )
 }
 

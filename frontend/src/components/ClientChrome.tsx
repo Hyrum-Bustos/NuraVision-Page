@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
 import { useAppState } from '../state/AppState'
 import { Avatar, LinkButton } from './ui'
@@ -112,10 +112,13 @@ export function ClientFooter() {
 }
 
 export function ClientLayout() {
+  const { pathname } = useLocation()
+
   return (
     <div className="flex min-h-screen flex-col bg-ivory">
       <ClientHeader />
-      <main className="flex-1">
+      {/* La clave por ruta reinicia la animación de entrada en cada página. */}
+      <main key={pathname} className="animate-fade-up flex-1">
         <Outlet />
       </main>
       <ClientFooter />

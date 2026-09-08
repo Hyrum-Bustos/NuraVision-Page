@@ -27,6 +27,12 @@
 
   --color-danger: #b3543f;
   --color-danger-soft: #f5e6e1;
+
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quick: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --shadow-card: 0 1px 2px rgba(30, 29, 24, 0.04), 0 8px 24px -12px rgba(30, 29, 24, 0.12);
+  --shadow-lift: 0 2px 4px rgba(30, 29, 24, 0.05), 0 18px 40px -20px rgba(30, 29, 24, 0.28);
 }
 
 html {
@@ -37,10 +43,20 @@ body {
   background-color: var(--color-ivory);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .font-serif-display {
   font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+/* Foco visible y consistente en todo lo interactivo. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-olive-600);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .placeholder-stripes {
@@ -69,12 +85,25 @@ body {
   background-color: var(--color-olive-100);
 }
 
+/* --- Animaciones --- */
+
 @keyframes fade-in {
   from {
     opacity: 0;
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -96,7 +125,34 @@ body {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+  }
+}
+
+@keyframes grow-bar {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes grow-width {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
   }
 }
 
@@ -104,12 +160,108 @@ body {
   animation: fade-in 0.18s ease-out both;
 }
 
+.animate-fade-up {
+  animation: fade-up 0.45s var(--ease-out-soft) both;
+}
+
 .animate-scale-in {
-  animation: scale-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: scale-in 0.22s var(--ease-out-soft) both;
 }
 
 .animate-slide-in-up {
-  animation: slide-in-up 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slide-in-up 0.24s var(--ease-out-soft) both;
+}
+
+.animate-grow-bar {
+  transform-origin: bottom;
+  animation: grow-bar 0.7s var(--ease-out-soft) both;
+}
+
+.animate-grow-width {
+  transform-origin: left;
+  animation: grow-width 0.8s var(--ease-out-soft) both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-line-soft) 25%,
+    var(--color-paper) 50%,
+    var(--color-line-soft) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* Aparición al hacer scroll. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s var(--ease-out-soft),
+    transform 0.6s var(--ease-out-soft);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Entrada escalonada de los hijos de una grilla. */
+.stagger > * {
+  animation: fade-up 0.5s var(--ease-out-soft) both;
+}
+
+.reveal:not(.is-visible) .stagger > * {
+  animation-play-state: paused;
+}
+
+.stagger > *:nth-child(1) {
+  animation-delay: 0.04s;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 0.22s;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 0.28s;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 0.34s;
+}
+.stagger > *:nth-child(7) {
+  animation-delay: 0.4s;
+}
+.stagger > *:nth-child(8) {
+  animation-delay: 0.46s;
+}
+
+/* Tarjetas que reaccionan al puntero. */
+.card-hover {
+  transition:
+    transform 0.3s var(--ease-out-soft),
+    box-shadow 0.3s var(--ease-out-soft),
+    border-color 0.3s var(--ease-out-soft);
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--color-line);
+}
+
+.zoom-media img {
+  transition: transform 0.6s var(--ease-out-soft);
+}
+
+.card-hover:hover .zoom-media img,
+.zoom-media:hover img {
+  transform: scale(1.04);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -120,5 +272,14 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .card-hover:hover {
+    transform: none;
   }
 }
