@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
-import { Button, Kicker, Placeholder } from '../components/ui'
+import { AppImage, Button, Kicker } from '../components/ui'
 import type { Role } from '../types'
 
 export default function Login() {
-  const { login } = useAppState()
+  const { login, siteContent } = useAppState()
   const navigate = useNavigate()
   const [email, setEmail] = useState('camila.torres@correo.cl')
   const [password, setPassword] = useState('••••••••••')
@@ -113,7 +113,7 @@ export default function Login() {
       </div>
 
       <div className="relative hidden md:block">
-        <Placeholder className="h-full w-full" />
+        <AppImage src={siteContent.loginImage} alt="" className="h-full w-full" />
         <div className="absolute bottom-10 left-10 max-w-xs rounded-xl border border-line-soft bg-paper p-5 shadow-sm">
           <p className="font-serif-display text-xl italic leading-snug text-ink">
             "Reservar dejó de ser una conversación de WhatsApp."

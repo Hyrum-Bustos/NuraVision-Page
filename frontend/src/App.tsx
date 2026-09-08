@@ -31,6 +31,7 @@ import AdminBookings from './pages/admin/AdminBookings'
 import AdminClients from './pages/admin/AdminClients'
 import AdminProfessionals from './pages/admin/AdminProfessionals'
 import AdminServices from './pages/admin/AdminServices'
+import AdminContent from './pages/admin/AdminContent'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminSettings from './pages/admin/AdminSettings'
 
@@ -49,6 +50,7 @@ const ADMIN_NAV = [
   { to: '/admin/clientes', label: 'Clientes' },
   { to: '/admin/profesionales', label: 'Profesionales' },
   { to: '/admin/servicios', label: 'Servicios' },
+  { to: '/admin/contenido', label: 'Contenido' },
   { to: '/admin/analitica', label: 'Analítica' },
   { to: '/admin/configuracion', label: 'Configuración' },
 ]
@@ -110,6 +112,7 @@ export default function App() {
                 <Route path="admin/clientes" element={<AdminClients />} />
                 <Route path="admin/profesionales" element={<AdminProfessionals />} />
                 <Route path="admin/servicios" element={<AdminServices />} />
+                <Route path="admin/contenido" element={<AdminContent />} />
                 <Route path="admin/analitica" element={<AdminAnalytics />} />
                 <Route path="admin/configuracion" element={<AdminSettings />} />
               </Route>
