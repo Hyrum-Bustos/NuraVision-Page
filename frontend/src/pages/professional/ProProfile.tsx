@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useAppState } from '../../state/AppState'
+import { useToast } from '../../state/Toast'
 import { AppImage, Button } from '../../components/ui'
 
 export default function ProProfile() {
   const { currentUser, getProfessional, updateProfessional } = useAppState()
+  const { toast } = useToast()
   const professional = getProfessional(currentUser?.professionalId ?? '')
 
   const [bio, setBio] = useState(professional?.bio ?? '')
   const [phone, setPhone] = useState(currentUser?.phone ?? '')
-  const [saved, setSaved] = useState(false)
 
   if (!professional) {
     return (
@@ -43,8 +44,7 @@ export default function ProProfile() {
         onSubmit={(e) => {
           e.preventDefault()
           updateProfessional(professional.id, { bio })
-          setSaved(true)
-          setTimeout(() => setSaved(false), 2500)
+          toast({ title: 'Perfil actualizado' })
         }}
       >
         <div>
@@ -70,7 +70,6 @@ export default function ProProfile() {
         </div>
         <div className="flex items-center gap-4">
           <Button type="submit">Guardar cambios</Button>
-          {saved && <span className="text-sm text-olive-700">Cambios guardados.</span>}
         </div>
       </form>
     </div>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { useAppState } from '../../state/AppState'
+import { useToast } from '../../state/Toast'
 import { TODAY_ISO } from '../../data/seed'
 import { AvailabilityEditor } from '../../components/AvailabilityEditor'
 import { Button } from '../../components/ui'
@@ -9,9 +10,9 @@ import type { WeeklyAvailability } from '../../types'
 
 export default function ProAvailability() {
   const { currentUser, getProfessional, updateProfessional, bookings } = useAppState()
+  const { toast } = useToast()
   const professional = getProfessional(currentUser?.professionalId ?? '')
   const [draft, setDraft] = useState<WeeklyAvailability | null>(professional?.availability ?? null)
-  const [saved, setSaved] = useState(false)
 
   /** Reservas confirmadas que quedarían fuera del horario que se está editando. */
   const conflicts = useMemo(() => {
@@ -61,7 +62,6 @@ export default function ProAvailability() {
           value={draft}
           onChange={(next) => {
             setDraft(next)
-            setSaved(false)
           }}
         />
       </div>
@@ -70,8 +70,7 @@ export default function ProAvailability() {
         <Button
           onClick={() => {
             updateProfessional(professional.id, { availability: draft })
-            setSaved(true)
-            setTimeout(() => setSaved(false), 2500)
+            toast({ title: 'Disponibilidad guardada' })
           }}
         >
           Guardar disponibilidad
@@ -79,7 +78,6 @@ export default function ProAvailability() {
         <Button variant="outline" onClick={() => setDraft(professional.availability)}>
           Descartar cambios
         </Button>
-        {saved && <span className="text-sm text-olive-700">Disponibilidad guardada.</span>}
       </div>
     </div>
   )

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
+import { useToast } from '../state/Toast'
+import { ConfirmDialog } from '../components/Modal'
 import { getMonthDays, getSlotsForDate } from '../lib/availability'
 import { Calendar } from '../components/Calendar'
 import { TimeSlotGrid } from '../components/TimeSlotGrid'
@@ -11,7 +13,9 @@ export default function BookingDetail() {
   const { id } = useParams()
   const { bookings, rescheduleBooking, updateBookingStatus, getService, getProfessional } =
     useAppState()
+  const { toast } = useToast()
   const [rescheduling, setRescheduling] = useState(false)
+  const [confirmingCancel, setConfirmingCancel] = useState(false)
   const [draftDate, setDraftDate] = useState<string | undefined>()
   const [draftTime, setDraftTime] = useState<string | undefined>()
   const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
@@ -66,18 +70,28 @@ export default function BookingDetail() {
       {canManage && professional && !rescheduling && (
         <div className="mt-6 flex gap-4">
           <Button onClick={() => setRescheduling(true)}>Reprogramar</Button>
-          <Button
-            variant="danger-outline"
-            onClick={() => {
-              if (window.confirm('¿Seguro que quieres cancelar esta reserva?')) {
-                updateBookingStatus(booking.id, 'cancelada')
-              }
-            }}
-          >
+          <Button variant="danger-outline" onClick={() => setConfirmingCancel(true)}>
             Cancelar reserva
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmingCancel}
+        onClose={() => setConfirmingCancel(false)}
+        onConfirm={() => {
+          updateBookingStatus(booking.id, 'cancelada')
+          toast({ title: 'Reserva cancelada', description: service?.name, tone: 'info' })
+        }}
+        title="Cancelar reserva"
+        confirmLabel="Cancelar reserva"
+        description={
+          <>
+            Se liberará el bloque de {formatLongDate(booking.dateISO)} a las {booking.time} h. Esta
+            acción no se puede deshacer.
+          </>
+        }
+      />
 
       {canManage && professional && rescheduling && (
         <div className="mt-8 rounded-2xl border border-line-soft bg-paper p-6">
@@ -120,6 +134,10 @@ export default function BookingDetail() {
               onClick={() => {
                 rescheduleBooking(booking.id, draftDate!, draftTime!)
                 setRescheduling(false)
+                toast({
+                  title: 'Reserva reprogramada',
+                  description: `${formatLongDate(draftDate!)} · ${draftTime} h`,
+                })
               }}
             >
               Guardar cambios
