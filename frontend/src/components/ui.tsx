@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
+import type { LucideIcon } from 'lucide-react'
 import type { BookingStatus } from '../types'
 
 type Variant = 'solid' | 'olive' | 'outline' | 'danger-outline'
@@ -161,20 +162,60 @@ export function StatCard({
   value,
   caption,
   captionTone = 'muted',
+  icon: Icon,
 }: {
   label: string
   value: string
   caption?: string
   captionTone?: 'muted' | 'positive' | 'negative'
+  icon?: LucideIcon
 }) {
   const captionColor =
-    captionTone === 'positive' ? 'text-olive-600' : captionTone === 'negative' ? 'text-danger' : 'text-muted'
+    captionTone === 'positive'
+      ? 'text-olive-600'
+      : captionTone === 'negative'
+        ? 'text-danger'
+        : 'text-muted'
+
   return (
-    <Card className="px-6 py-5">
-      <Kicker>{label}</Kicker>
+    <Card hover className="px-6 py-5">
+      <div className="flex items-start justify-between gap-3">
+        <Kicker>{label}</Kicker>
+        {Icon && (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-olive-50 text-olive-700">
+            <Icon className="h-4 w-4" />
+          </span>
+        )}
+      </div>
       <p className="mt-3 font-serif-display text-4xl text-ink">{value}</p>
       {caption && <p className={`mt-2 text-sm ${captionColor}`}>{caption}</p>}
     </Card>
+  )
+}
+
+/** Estado vacío consistente para listas y tablas. */
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: {
+  icon?: LucideIcon
+  title: string
+  description?: string
+  action?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col items-center rounded-2xl border border-dashed border-line px-6 py-12 text-center">
+      {Icon && (
+        <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-line-soft text-muted">
+          <Icon className="h-5 w-5" />
+        </span>
+      )}
+      <p className="font-medium text-ink">{title}</p>
+      {description && <p className="mt-1 max-w-sm text-sm text-muted">{description}</p>}
+      {action && <div className="mt-4">{action}</div>}
+    </div>
   )
 }
 

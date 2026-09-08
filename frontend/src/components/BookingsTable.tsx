@@ -25,7 +25,7 @@ export function BookingsTable({ bookings }: { bookings: Booking[] }) {
             const professional = getProfessional(b.professionalId)
             const { day, month } = formatDayMonthShort(b.dateISO)
             return (
-              <tr key={b.id}>
+              <tr key={b.id} className="transition-colors hover:bg-ivory/70">
                 <td className="px-6 py-4 text-muted-light">{b.code}</td>
                 <td className="px-6 py-4 font-medium text-ink">{b.clientName}</td>
                 <td className="px-6 py-4 text-ink">{service?.name ?? '—'}</td>

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CalendarCheck, Clock, Coffee, TrendingUp } from 'lucide-react'
 import { useAppState } from '../../state/AppState'
 import { TODAY_ISO } from '../../data/seed'
 import { getDayAvailability, getScheduleBlocks, timeToMinutes } from '../../lib/availability'
@@ -75,7 +76,7 @@ export default function ProDashboard() {
           <h1 className="font-serif-display text-4xl text-ink">
             Buenos días, {currentUser?.firstName}
           </h1>
-          <p className="mt-2 text-sm capitalize text-muted">
+          <p className="mt-2 text-sm text-muted first-letter:uppercase">
             {formatWeekdayLong(TODAY_ISO)} · {today.length}{' '}
             {today.length === 1 ? 'atención programada' : 'atenciones programadas'}
           </p>
@@ -93,6 +94,7 @@ export default function ProDashboard() {
           label="Atenciones hoy"
           value={String(today.length)}
           caption={`${inProgress} en curso`}
+          icon={CalendarCheck}
         />
         <StatCard
           label="Horas ocupadas"
@@ -100,16 +102,19 @@ export default function ProDashboard() {
             .toFixed(0)
             .replace('.', ',')}`}
           caption={`${occupancy}% de la jornada`}
+          icon={Clock}
         />
         <StatCard
           label="Este mes"
           value={String(month.length)}
           caption="reservas de septiembre"
+          icon={TrendingUp}
         />
         <StatCard
           label="Bloques libres hoy"
           value={String(freeBlocks.length)}
           caption={freeBlocks.map((b) => b.start).join(' · ') || 'Sin bloques libres'}
+          icon={Coffee}
         />
       </div>
 

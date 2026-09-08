@@ -15,14 +15,20 @@ export default function AdminAnalytics() {
 
       <Card className="mt-8 p-6">
         <h2 className="font-serif-display text-2xl text-ink">Evolución de reservas</h2>
-        <div className="mt-8 flex h-48 items-end gap-4">
-          {monthlyBookingTrend.map((m) => (
-            <div key={m.label} className="flex flex-1 flex-col items-center gap-2">
-              <div
-                className="w-full rounded-t-md bg-olive-100"
-                style={{ height: `${(m.value / maxTrend) * 100}%` }}
-              />
-              <span className="text-xs text-muted">{m.label}</span>
+        <div className="mt-8 flex h-52 gap-4">
+          {monthlyBookingTrend.map((m, i) => (
+            <div key={m.label} className="group flex flex-1 flex-col">
+              <div className="flex flex-1 items-end">
+                <div
+                  title={`${m.label}: ${m.value} reservas`}
+                  className="animate-grow-bar w-full rounded-t-md bg-olive-100 transition-colors group-hover:bg-olive-400"
+                  style={{
+                    height: `${(m.value / maxTrend) * 100}%`,
+                    animationDelay: `${i * 60}ms`,
+                  }}
+                />
+              </div>
+              <span className="mt-2 text-center text-xs text-muted">{m.label}</span>
             </div>
           ))}
         </div>

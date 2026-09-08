@@ -87,7 +87,7 @@ export default function AdminServices() {
             {services.map((s) => {
               const offeredBy = professionals.filter((p) => p.serviceIds.includes(s.id)).length
               return (
-                <tr key={s.id}>
+                <tr key={s.id} className="transition-colors hover:bg-ivory/70">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <AppImage
