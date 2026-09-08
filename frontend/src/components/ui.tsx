@@ -1,0 +1,200 @@
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { Link, type LinkProps } from 'react-router-dom'
+import type { BookingStatus } from '../types'
+
+type Variant = 'solid' | 'olive' | 'outline' | 'danger-outline'
+
+const variantClasses: Record<Variant, string> = {
+  solid: 'bg-ink text-white hover:bg-ink-soft',
+  olive: 'bg-olive-600 text-white hover:bg-olive-700',
+  outline: 'border border-line text-ink bg-paper hover:bg-ivory',
+  'danger-outline': 'border border-[#e6c9c0] text-danger bg-paper hover:bg-danger-soft',
+}
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: Variant
+  full?: boolean
+}
+
+export function Button({ variant = 'solid', full, className = '', disabled, ...props }: ButtonProps) {
+  return (
+    <button
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+        full ? 'w-full' : ''
+      } ${variantClasses[variant]} ${className}`}
+      {...props}
+    />
+  )
+}
+
+interface LinkButtonProps extends LinkProps {
+  variant?: Variant
+  className?: string
+  children?: ReactNode
+}
+
+export function LinkButton({ variant = 'solid', className = '', ...props }: LinkButtonProps) {
+  return (
+    <Link
+      className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-colors ${variantClasses[variant]} ${className}`}
+      {...props}
+    />
+  )
+}
+
+export function Kicker({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <p className={`text-xs font-medium uppercase tracking-[0.18em] text-muted ${className}`}>
+      {children}
+    </p>
+  )
+}
+
+export function Placeholder({
+  label,
+  variant = 'beige',
+  className = '',
+}: {
+  label?: string
+  variant?: 'beige' | 'lavender'
+  className?: string
+}) {
+  return (
+    <div
+      className={`flex items-center justify-center ${
+        variant === 'lavender' ? 'placeholder-stripes-lavender' : 'placeholder-stripes'
+      } ${className}`}
+    >
+      {label && (
+        <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-light">{label}</span>
+      )}
+    </div>
+  )
+}
+
+const statusStyles: Record<BookingStatus, string> = {
+  confirmada: 'bg-olive-50 text-olive-700',
+  en_curso: 'bg-lavender text-[#4a3a63]',
+  completada: 'bg-line-soft text-muted',
+  cancelada: 'bg-danger-soft text-danger',
+}
+
+const statusLabels: Record<BookingStatus, string> = {
+  confirmada: 'Confirmada',
+  en_curso: 'En curso',
+  completada: 'Completada',
+  cancelada: 'Cancelada',
+}
+
+export function StatusBadge({ status }: { status: BookingStatus }) {
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyles[status]}`}>
+      {statusLabels[status]}
+    </span>
+  )
+}
+
+export function Tag({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <span className={`rounded-full bg-olive-50 px-3 py-1 text-xs font-medium text-olive-700 ${className}`}>
+      {children}
+    </span>
+  )
+}
+
+export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <div className={`rounded-2xl border border-line-soft bg-paper ${className}`}>{children}</div>
+  )
+}
+
+export function StatCard({
+  label,
+  value,
+  caption,
+  captionTone = 'muted',
+}: {
+  label: string
+  value: string
+  caption?: string
+  captionTone?: 'muted' | 'positive' | 'negative'
+}) {
+  const captionColor =
+    captionTone === 'positive' ? 'text-olive-600' : captionTone === 'negative' ? 'text-danger' : 'text-muted'
+  return (
+    <Card className="px-6 py-5">
+      <Kicker>{label}</Kicker>
+      <p className="mt-3 font-serif-display text-4xl text-ink">{value}</p>
+      {caption && <p className={`mt-2 text-sm ${captionColor}`}>{caption}</p>}
+    </Card>
+  )
+}
+
+export function FilterPills<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[]
+  value: T
+  onChange: (value: T) => void
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`rounded-full border px-5 py-2 text-sm font-medium transition-colors ${
+            opt.value === value
+              ? 'border-ink bg-ink text-white'
+              : 'border-line bg-paper text-ink hover:bg-ivory'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function UnderlineTabs<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[]
+  value: T
+  onChange: (value: T) => void
+}) {
+  return (
+    <div className="flex gap-8 border-b border-line-soft">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`-mb-px border-b-2 pb-3 text-sm font-medium transition-colors ${
+            opt.value === value
+              ? 'border-ink text-ink'
+              : 'border-transparent text-muted hover:text-ink'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function Avatar({ initials, tone = 'olive' }: { initials: string; tone?: 'olive' | 'ink' }) {
+  return (
+    <div
+      className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium ${
+        tone === 'olive' ? 'bg-olive-100 text-olive-700' : 'bg-ink text-white'
+      }`}
+    >
+      {initials}
+    </div>
+  )
+}

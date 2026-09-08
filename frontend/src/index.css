@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Fraunces", "Iowan Old Style", serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  --color-ivory: #f7f4ec;
+  --color-paper: #fffdf9;
+  --color-ink: #1e1d18;
+  --color-ink-soft: #2a2921;
+
+  --color-line: #e4dfd0;
+  --color-line-soft: #ece8dc;
+
+  --color-muted: #8a8577;
+  --color-muted-light: #a8a396;
+
+  --color-olive-50: #eef0e2;
+  --color-olive-100: #dde2c8;
+  --color-olive-400: #6b7a3f;
+  --color-olive-600: #4a5a2e;
+  --color-olive-700: #3c4a25;
+  --color-olive-900: #2a3419;
+
+  --color-lavender: #e7e2ee;
+  --color-lavender-line: #d4cce3;
+
+  --color-danger: #b3543f;
+  --color-danger-soft: #f5e6e1;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.font-serif-display {
+  font-family: var(--font-serif);
+}
+
+.placeholder-stripes {
+  background-color: #ece7d9;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(30, 29, 24, 0.06),
+    rgba(30, 29, 24, 0.06) 2px,
+    transparent 2px,
+    transparent 14px
+  );
+}
+
+.placeholder-stripes-lavender {
+  background-color: var(--color-lavender);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(60, 40, 90, 0.08),
+    rgba(60, 40, 90, 0.08) 2px,
+    transparent 2px,
+    transparent 14px
+  );
+}
+
+::selection {
+  background-color: var(--color-olive-100);
+}

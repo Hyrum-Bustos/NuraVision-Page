@@ -1,0 +1,93 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAppState } from '../state/AppState'
+import { Avatar, Button, Kicker } from '../components/ui'
+
+export default function Profile() {
+  const { currentUser } = useAppState()
+  const navigate = useNavigate()
+  const [firstName, setFirstName] = useState(currentUser?.firstName ?? '')
+  const [lastName, setLastName] = useState(currentUser?.lastName ?? '')
+  const [email, setEmail] = useState(currentUser?.email ?? '')
+  const [phone, setPhone] = useState(currentUser?.phone ?? '')
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (!currentUser) navigate('/login')
+  }, [currentUser, navigate])
+
+  if (!currentUser) return null
+
+  return (
+    <div className="mx-auto max-w-2xl px-6 py-14">
+      <h1 className="font-serif-display text-5xl text-ink">Mi perfil</h1>
+
+      <div className="mt-8 flex items-center gap-4">
+        <Avatar initials={currentUser.initials} />
+        <div>
+          <p className="font-medium text-ink">{currentUser.name}</p>
+          {currentUser.clientSince && (
+            <p className="text-sm text-muted">Cliente desde {currentUser.clientSince}</p>
+          )}
+        </div>
+      </div>
+
+      <form
+        className="mt-8 space-y-5"
+        onSubmit={(e) => {
+          e.preventDefault()
+          setSaved(true)
+          setTimeout(() => setSaved(false), 2500)
+        }}
+      >
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Nombre" value={firstName} onChange={setFirstName} />
+          <Field label="Apellido" value={lastName} onChange={setLastName} />
+        </div>
+        <Field label="Correo" value={email} onChange={setEmail} />
+        <Field label="Teléfono" value={phone} onChange={setPhone} />
+
+        <div className="rounded-2xl bg-line-soft/60 p-6">
+          <Kicker>Privacidad de imágenes</Kicker>
+          <p className="mt-2 text-sm text-muted">
+            Las fotografías que subes al análisis con IA son privadas: solo tú puedes verlas. No se
+            muestran a profesionales ni a otros clientes, y puedes eliminarlas en cualquier
+            momento.
+          </p>
+          <button
+            type="button"
+            className="mt-3 rounded-full border border-[#e6c9c0] px-4 py-2 text-sm text-danger hover:bg-danger-soft"
+          >
+            Eliminar mis imágenes
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button type="submit">Guardar cambios</Button>
+          {saved && <span className="text-sm text-olive-700">Cambios guardados.</span>}
+        </div>
+      </form>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div>
+      <label className="text-xs font-medium uppercase tracking-[0.14em] text-muted">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-3 text-sm text-ink outline-none focus:border-ink"
+      />
+    </div>
+  )
+}
