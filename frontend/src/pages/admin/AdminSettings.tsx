@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { Button } from '../../components/ui'
+import { useAppState } from '../../state/AppState'
+import { useToast } from '../../state/Toast'
+import { ConfirmDialog } from '../../components/Modal'
+import { Button, Card, Kicker } from '../../components/ui'
 
 export default function AdminSettings() {
   const [name, setName] = useState('Estudio Nura')
@@ -7,6 +10,9 @@ export default function AdminSettings() {
   const [phone, setPhone] = useState('+56 9 1234 5678')
   const [hours, setHours] = useState('Mar a Sáb · 10:00-19:00')
   const [saved, setSaved] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const { resetDemoData } = useAppState()
+  const { toast } = useToast()
 
   return (
     <div className="mx-auto max-w-2xl px-8 py-10">
@@ -30,6 +36,29 @@ export default function AdminSettings() {
           {saved && <span className="text-sm text-olive-700">Cambios guardados.</span>}
         </div>
       </form>
+
+      <Card className="mt-10 p-6">
+        <Kicker>Datos del prototipo</Kicker>
+        <p className="mt-2 text-sm text-muted">
+          Los servicios, profesionales, reservas e imágenes se guardan en este navegador. Puedes
+          volver al contenido de ejemplo original en cualquier momento.
+        </p>
+        <Button variant="danger-outline" className="mt-4" onClick={() => setResetting(true)}>
+          Restablecer datos de demostración
+        </Button>
+      </Card>
+
+      <ConfirmDialog
+        open={resetting}
+        onClose={() => setResetting(false)}
+        onConfirm={() => {
+          resetDemoData()
+          toast({ title: 'Datos restablecidos', tone: 'info' })
+        }}
+        title="Restablecer datos"
+        confirmLabel="Restablecer"
+        description="Se perderán los servicios, profesionales, reservas e imágenes que hayas cargado, y volverá el contenido de ejemplo."
+      />
     </div>
   )
 }
