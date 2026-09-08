@@ -9,7 +9,6 @@ export default function AdminSettings() {
   const [address, setAddress] = useState('Av. Libertad 1250, Viña del Mar')
   const [phone, setPhone] = useState('+56 9 1234 5678')
   const [hours, setHours] = useState('Mar a Sáb · 10:00-19:00')
-  const [saved, setSaved] = useState(false)
   const [resetting, setResetting] = useState(false)
   const { resetDemoData } = useAppState()
   const { toast } = useToast()
@@ -23,8 +22,7 @@ export default function AdminSettings() {
         className="mt-8 space-y-5"
         onSubmit={(e) => {
           e.preventDefault()
-          setSaved(true)
-          setTimeout(() => setSaved(false), 2500)
+          toast({ title: 'Configuración guardada' })
         }}
       >
         <Field label="Nombre del negocio" value={name} onChange={setName} />
@@ -33,7 +31,6 @@ export default function AdminSettings() {
         <Field label="Horario de atención" value={hours} onChange={setHours} />
         <div className="flex items-center gap-4">
           <Button type="submit">Guardar cambios</Button>
-          {saved && <span className="text-sm text-olive-700">Cambios guardados.</span>}
         </div>
       </form>
 

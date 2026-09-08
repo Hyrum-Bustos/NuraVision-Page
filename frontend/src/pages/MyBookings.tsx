@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CalendarX } from 'lucide-react'
 import { useAppState } from '../state/AppState'
-import { StatusBadge, UnderlineTabs } from '../components/ui'
+import { EmptyState, LinkButton, StatusBadge, UnderlineTabs } from '../components/ui'
 import { formatDayMonthShort, formatPrice } from '../lib/format'
 
 type Tab = 'proximas' | 'completadas' | 'canceladas'
@@ -37,9 +38,22 @@ export default function MyBookings() {
 
       <div className="mt-8 space-y-4">
         {filtered.length === 0 && (
-          <p className="rounded-2xl border border-dashed border-line p-8 text-center text-sm text-muted">
-            No tienes reservas en esta categoría.
-          </p>
+          <EmptyState
+            icon={CalendarX}
+            title={
+              tab === 'proximas'
+                ? 'No tienes reservas próximas'
+                : tab === 'completadas'
+                  ? 'Todavía no hay reservas completadas'
+                  : 'No tienes reservas canceladas'
+            }
+            description={
+              tab === 'proximas'
+                ? 'Cuando reserves una hora, aparecerá aquí con su detalle.'
+                : undefined
+            }
+            action={tab === 'proximas' ? <LinkButton to="/reservar">Reservar ahora</LinkButton> : undefined}
+          />
         )}
         {filtered.map((b) => {
           const service = getService(b.serviceId)

@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
+import { useToast } from '../state/Toast'
 import { Avatar, Button, Kicker } from '../components/ui'
 
 export default function Profile() {
   const { currentUser } = useAppState()
+  const { toast } = useToast()
   const navigate = useNavigate()
   const [firstName, setFirstName] = useState(currentUser?.firstName ?? '')
   const [lastName, setLastName] = useState(currentUser?.lastName ?? '')
   const [email, setEmail] = useState(currentUser?.email ?? '')
   const [phone, setPhone] = useState(currentUser?.phone ?? '')
-  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     if (!currentUser) navigate('/login')
@@ -36,8 +37,7 @@ export default function Profile() {
         className="mt-8 space-y-5"
         onSubmit={(e) => {
           e.preventDefault()
-          setSaved(true)
-          setTimeout(() => setSaved(false), 2500)
+          toast({ title: 'Perfil actualizado' })
         }}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -64,7 +64,6 @@ export default function Profile() {
 
         <div className="flex items-center gap-4">
           <Button type="submit">Guardar cambios</Button>
-          {saved && <span className="text-sm text-olive-700">Cambios guardados.</span>}
         </div>
       </form>
     </div>

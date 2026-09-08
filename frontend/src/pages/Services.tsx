@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
 import { categoryLabel, serviceCategories } from '../data/seed'
-import { AppImage, Button, FilterPills, Kicker } from '../components/ui'
+import { SearchX } from 'lucide-react'
+import { AppImage, Button, EmptyState, FilterPills, Kicker } from '../components/ui'
 import { formatPrice } from '../lib/format'
 import type { ServiceCategoryId } from '../types'
 
@@ -92,9 +93,13 @@ export default function Services() {
       </div>
 
       {filtered.length === 0 && (
-        <p className="mt-10 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
-          Todavía no hay servicios en esta categoría.
-        </p>
+        <div className="mt-10">
+          <EmptyState
+            icon={SearchX}
+            title="No hay servicios en esta categoría"
+            description="Prueba con otra categoría o vuelve a “Todos”."
+          />
+        </div>
       )}
     </div>
   )
