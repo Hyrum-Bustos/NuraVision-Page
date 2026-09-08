@@ -194,6 +194,8 @@ export function StringListField({
         {values.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
             <input
+              type="text"
+              aria-label={`${label} ${index + 1}`}
               value={item}
               onChange={(e) =>
                 onChange(values.map((v, i) => (i === index ? e.target.value : v)))
