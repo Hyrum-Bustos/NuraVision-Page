@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppStateProvider } from './state/AppState'
+import { ToastProvider } from './state/Toast'
 import { ClientLayout } from './components/ClientChrome'
 import { DashboardShell } from './components/DashboardChrome'
 import { RequireRole } from './components/RequireRole'
@@ -55,67 +56,69 @@ const ADMIN_NAV = [
 export default function App() {
   return (
     <AppStateProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route path="login" element={<Login />} />
-          <Route path="registro" element={<Register />} />
+      <ToastProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route path="login" element={<Login />} />
+            <Route path="registro" element={<Register />} />
 
-          <Route element={<ClientLayout />}>
-            <Route index element={<Landing />} />
-            <Route path="servicios" element={<Services />} />
-            <Route path="servicios/:id" element={<ServiceDetail />} />
-            <Route path="profesionales" element={<Professionals />} />
-            <Route path="profesionales/:id" element={<ProfessionalDetail />} />
-            <Route path="reservar" element={<BookingFlow />} />
-            <Route path="mis-reservas" element={<MyBookings />} />
-            <Route path="mis-reservas/:id" element={<BookingDetail />} />
-            <Route path="analisis-ia" element={<AIAnalysis />} />
-            <Route path="perfil" element={<Profile />} />
-          </Route>
-
-          <Route element={<RequireRole role="profesional" />}>
-            <Route
-              element={
-                <DashboardShell
-                  sectionLabel="Panel profesional"
-                  userSubtitle="Nail artist"
-                  navItems={PROFESSIONAL_NAV}
-                />
-              }
-            >
-              <Route path="profesional" element={<ProDashboard />} />
-              <Route path="profesional/agenda" element={<ProAgenda />} />
-              <Route path="profesional/disponibilidad" element={<ProAvailability />} />
-              <Route path="profesional/reservas" element={<ProHistory />} />
-              <Route path="profesional/servicios" element={<ProServices />} />
-              <Route path="profesional/perfil" element={<ProProfile />} />
+            <Route element={<ClientLayout />}>
+              <Route index element={<Landing />} />
+              <Route path="servicios" element={<Services />} />
+              <Route path="servicios/:id" element={<ServiceDetail />} />
+              <Route path="profesionales" element={<Professionals />} />
+              <Route path="profesionales/:id" element={<ProfessionalDetail />} />
+              <Route path="reservar" element={<BookingFlow />} />
+              <Route path="mis-reservas" element={<MyBookings />} />
+              <Route path="mis-reservas/:id" element={<BookingDetail />} />
+              <Route path="analisis-ia" element={<AIAnalysis />} />
+              <Route path="perfil" element={<Profile />} />
             </Route>
-          </Route>
 
-          <Route element={<RequireRole role="administrador" />}>
-            <Route
-              element={
-                <DashboardShell
-                  sectionLabel="Administración"
-                  userSubtitle="Administradora"
-                  navItems={ADMIN_NAV}
-                />
-              }
-            >
-              <Route path="admin" element={<AdminDashboard />} />
-              <Route path="admin/reservas" element={<AdminBookings />} />
-              <Route path="admin/clientes" element={<AdminClients />} />
-              <Route path="admin/profesionales" element={<AdminProfessionals />} />
-              <Route path="admin/servicios" element={<AdminServices />} />
-              <Route path="admin/analitica" element={<AdminAnalytics />} />
-              <Route path="admin/configuracion" element={<AdminSettings />} />
+            <Route element={<RequireRole role="profesional" />}>
+              <Route
+                element={
+                  <DashboardShell
+                    sectionLabel="Panel profesional"
+                    userSubtitle="Nail artist"
+                    navItems={PROFESSIONAL_NAV}
+                  />
+                }
+              >
+                <Route path="profesional" element={<ProDashboard />} />
+                <Route path="profesional/agenda" element={<ProAgenda />} />
+                <Route path="profesional/disponibilidad" element={<ProAvailability />} />
+                <Route path="profesional/reservas" element={<ProHistory />} />
+                <Route path="profesional/servicios" element={<ProServices />} />
+                <Route path="profesional/perfil" element={<ProProfile />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route path="*" element={<Landing />} />
-        </Routes>
-      </BrowserRouter>
+            <Route element={<RequireRole role="administrador" />}>
+              <Route
+                element={
+                  <DashboardShell
+                    sectionLabel="Administración"
+                    userSubtitle="Administradora"
+                    navItems={ADMIN_NAV}
+                  />
+                }
+              >
+                <Route path="admin" element={<AdminDashboard />} />
+                <Route path="admin/reservas" element={<AdminBookings />} />
+                <Route path="admin/clientes" element={<AdminClients />} />
+                <Route path="admin/profesionales" element={<AdminProfessionals />} />
+                <Route path="admin/servicios" element={<AdminServices />} />
+                <Route path="admin/analitica" element={<AdminAnalytics />} />
+                <Route path="admin/configuracion" element={<AdminSettings />} />
+              </Route>
+            </Route>
+
+            <Route path="*" element={<Landing />} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
     </AppStateProvider>
   )
 }
