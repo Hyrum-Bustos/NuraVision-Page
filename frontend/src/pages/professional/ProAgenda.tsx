@@ -25,14 +25,14 @@ export default function ProAgenda() {
 
   if (!professional) {
     return (
-      <div className="mx-auto max-w-6xl px-8 py-10">
+      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
         <p className="text-sm text-muted">No encontramos tu ficha de profesional.</p>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-8 py-10">
+    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-serif-display text-4xl text-ink">Mi agenda</h1>

@@ -30,14 +30,14 @@ export default function ProAvailability() {
 
   if (!professional || !draft) {
     return (
-      <div className="mx-auto max-w-4xl px-8 py-10">
+      <div className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10">
         <p className="text-sm text-muted">No encontramos tu ficha de profesional.</p>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-8 py-10">
+    <div className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10">
       <h1 className="font-serif-display text-4xl text-ink">Mi disponibilidad</h1>
       <p className="mt-2 max-w-xl text-sm text-muted">
         Define tus días laborales y tramos de atención. Los clientes solo podrán reservar dentro de

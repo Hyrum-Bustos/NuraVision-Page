@@ -70,7 +70,7 @@ export default function AdminProfessionals() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-8 py-10">
+    <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-10">
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-serif-display text-4xl text-ink">Profesionales</h1>

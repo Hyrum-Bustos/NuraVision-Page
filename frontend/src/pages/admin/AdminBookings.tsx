@@ -26,7 +26,7 @@ export default function AdminBookings() {
   }, [bookings, statusFilter, professionalFilter, search])
 
   return (
-    <div className="mx-auto max-w-6xl px-8 py-10">
+    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
       <h1 className="font-serif-display text-4xl text-ink">Reservas</h1>
       <p className="mt-2 text-sm text-muted">Todas las reservas del estudio, en un solo lugar.</p>
 

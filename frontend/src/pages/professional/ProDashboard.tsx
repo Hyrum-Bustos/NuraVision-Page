@@ -47,7 +47,7 @@ export default function ProDashboard() {
 
   if (!professional) {
     return (
-      <div className="mx-auto max-w-6xl px-8 py-10">
+      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
         <p className="text-sm text-muted">No encontramos tu ficha de profesional.</p>
       </div>
     )
@@ -70,7 +70,7 @@ export default function ProDashboard() {
   const occupancy = workdayHours > 0 ? Math.round((occupiedMinutes / 60 / workdayHours) * 100) : 0
 
   return (
-    <div className="mx-auto max-w-6xl px-8 py-10">
+    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-serif-display text-4xl text-ink">

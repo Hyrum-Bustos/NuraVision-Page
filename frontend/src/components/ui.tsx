@@ -35,12 +35,21 @@ export function Button({ variant = 'solid', full, className = '', disabled, ...p
 interface LinkButtonProps extends LinkProps {
   variant?: Variant
   className?: string
+  full?: boolean
   children?: ReactNode
 }
 
-export function LinkButton({ variant = 'solid', className = '', ...props }: LinkButtonProps) {
+export function LinkButton({
+  variant = 'solid',
+  className = '',
+  full,
+  ...props
+}: LinkButtonProps) {
   return (
-    <Link className={`${baseButtonClasses} ${variantClasses[variant]} ${className}`} {...props} />
+    <Link
+      className={`${baseButtonClasses} ${full ? 'w-full' : ''} ${variantClasses[variant]} ${className}`}
+      {...props}
+    />
   )
 }
 
