@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useAppState, createId } from '../../state/AppState'
+import { useAppState } from '../../state/AppState'
+import { createId } from '../../lib/id'
 import { useToast } from '../../state/Toast'
 import { ConfirmDialog, Modal } from '../../components/Modal'
 import { ImageUploader } from '../../components/ImageUploader'
