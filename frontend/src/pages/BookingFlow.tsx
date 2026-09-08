@@ -5,6 +5,7 @@ import { getServiceById, services } from '../data/services'
 import { getProfessionalById, getProfessionalsForService } from '../data/professionals'
 import { getMonthDays, getSlotsForDate } from '../lib/availability'
 import { Stepper } from '../components/Stepper'
+import { useScrollToTopOnChange } from '../components/ScrollToTop'
 import { Calendar } from '../components/Calendar'
 import { TimeSlotGrid } from '../components/TimeSlotGrid'
 import { Avatar, Button, Kicker, Placeholder, Tag } from '../components/ui'
@@ -31,6 +32,21 @@ export default function BookingFlow() {
     }
   }, [currentUser, navigate])
 
+  const step: Step = confirmedBooking
+    ? 'confirm'
+    : !bookingDraft.serviceId
+      ? 'service'
+      : !bookingDraft.professionalId
+        ? 'professional'
+        : !bookingDraft.dateISO
+          ? 'date'
+          : !bookingDraft.time
+            ? 'time'
+            : 'confirm'
+
+  // Cada paso del asistente vuelve al inicio de la pantalla.
+  useScrollToTopOnChange(confirmedBooking ? 'success' : step)
+
   if (!currentUser || currentUser.role !== 'cliente') return null
 
   if (confirmedBooking) {
@@ -41,12 +57,6 @@ export default function BookingFlow() {
   const professional = bookingDraft.professionalId
     ? getProfessionalById(bookingDraft.professionalId)
     : undefined
-
-  let step: Step = 'confirm'
-  if (!bookingDraft.serviceId) step = 'service'
-  else if (!bookingDraft.professionalId) step = 'professional'
-  else if (!bookingDraft.dateISO) step = 'date'
-  else if (!bookingDraft.time) step = 'time'
 
   const stepIndex = { service: 0, professional: 1, date: 2, time: 3, confirm: 4 }[step]
 
