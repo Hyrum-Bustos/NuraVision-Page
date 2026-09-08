@@ -41,6 +41,11 @@ function lunch(start = '13:00', end = '14:00'): DayAvailability['breaks'] {
   return [{ id: 'colacion', start, end, label: 'Colación' }]
 }
 
+/** Horario base para un profesional nuevo: el mismo del estudio. */
+export function createDefaultAvailability(): WeeklyAvailability {
+  return studioWeek()
+}
+
 /** Mar a Sáb, con colación al mediodía: el horario del estudio. */
 function studioWeek(overrides: Partial<WeeklyAvailability> = {}): WeeklyAvailability {
   return {
