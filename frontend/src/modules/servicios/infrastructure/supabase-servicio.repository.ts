@@ -22,10 +22,13 @@ export class SupabaseServicioRepository implements ServicioRepository {
   }
 
   async obtenerPorId(id: string): Promise<Servicio | null> {
+    // La columna es bigint: un id no numerico nunca va a existir, y consultarlo
+    // haria que PostgREST respondiera un 400. Los ids del prototipo eran slugs
+    // ("manicure-ritual-nura"), asi que esos enlaces caen aqui y degradan a
+    // "no encontrado". Se descarta la cadena vacia aparte, porque Number('')
+    // es 0 y pasaria la comprobacion de entero.
     const idNumerico = Number(id)
-    if (!Number.isInteger(idNumerico)) {
-      // La columna es bigint: un id no numerico nunca va a existir, y
-      // consultarlo haria que PostgREST respondiera un 400.
+    if (id.trim() === '' || !Number.isInteger(idNumerico)) {
       return null
     }
 

@@ -3,5 +3,9 @@
  * La UI importa desde aqui y no desde los archivos sueltos.
  */
 export { obtenerServicios, crearObtenerServicios } from './obtener-servicios.usecase'
+export {
+  obtenerServicioPorId,
+  crearObtenerServicioPorId,
+} from './obtener-servicio-por-id.usecase'
 export type { Servicio } from '../domain/servicio.types'
 export type { ServicioRepository } from '../domain/servicio.repository'
