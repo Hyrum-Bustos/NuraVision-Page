@@ -6,6 +6,20 @@ Haz commits atómicos: cada commit debe representar un cambio lógico y completo
 
 No hagas merge ni push directo a `main`/`master` sin confirmación explícita.
 
+# Verificación
+
+Antes de dar por terminado un cambio en `frontend/`, ejecuta desde esa carpeta:
+
+```bash
+npx tsc --noEmit -p tsconfig.app.json   # tipos
+npm run build                           # tsc -b + vite build
+npm run lint                            # oxlint
+```
+
+**Usa siempre `-p tsconfig.app.json`.** El `tsconfig.json` de la raíz solo declara
+referencias (`"files": []`), así que `npx tsc --noEmit` a secas no compila ningún
+archivo y termina en 0 aunque el código esté roto: es un falso positivo.
+
 # Reporte al finalizar una tarea
 
 Al terminar cualquier tarea, entrega un resumen breve y claro con esta estructura:
