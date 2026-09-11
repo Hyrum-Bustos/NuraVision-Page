@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAppState } from '../../state/AppState'
-import type { Role } from '../types'
+import { useAppState } from '@/shared/state/AppState'
+import type { Role } from '@/shared/types'
 
 export function RequireRole({ role }: { role: Role }) {
   const { currentUser } = useAppState()

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { AppImage, Button, Kicker } from '../shared/ui/ui'
+import { useAppState } from '@/shared/state/AppState'
+import { AppImage, Button, Kicker } from '@/shared/ui/ui'
 
 export default function Professionals() {
   const { professionals, setBookingDraft, nextSlotsFor } = useAppState()

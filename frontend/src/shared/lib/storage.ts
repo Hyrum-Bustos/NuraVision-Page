@@ -1,4 +1,4 @@
-import type { AppData } from '../shared/types'
+import type { AppData } from '@/shared/types'
 
 const STORAGE_KEY = 'nuravision:data:v1'
 

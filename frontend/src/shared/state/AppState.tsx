@@ -18,11 +18,11 @@ import type {
   Role,
   Service,
   SiteContent,
-} from '../shared/types'
-import { createSeedData } from '../data/seed'
-import { clearStoredData, loadStoredData, saveStoredData } from '../lib/storage'
-import { createId } from '../lib/id'
-import { getNextAvailableSlots, type NextSlot } from '../lib/availability'
+} from '@/shared/types'
+import { createSeedData } from '@/shared/data/seed'
+import { clearStoredData, loadStoredData, saveStoredData } from '@/shared/lib/storage'
+import { createId } from '@/shared/lib/id'
+import { getNextAvailableSlots, type NextSlot } from '@/shared/lib/availability'
 
 const DEMO_USERS: Record<Role, CurrentUser> = {
   cliente: {

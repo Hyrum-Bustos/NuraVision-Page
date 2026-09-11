@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, Sparkles, X } from 'lucide-react'
-import { useAppState } from '../../state/AppState'
-import { Avatar, LinkButton } from '../ui/ui'
+import { useAppState } from '@/shared/state/AppState'
+import { Avatar, LinkButton } from '@/shared/ui/ui'
 
 function Brand() {
   return (

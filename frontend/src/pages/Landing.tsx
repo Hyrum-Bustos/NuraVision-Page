@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { categoryLabel } from '../data/seed'
-import { AppImage, Kicker, LinkButton } from '../shared/ui/ui'
-import { Reveal } from '../shared/ui/Reveal'
-import { formatPrice } from '../lib/format'
+import { useAppState } from '@/shared/state/AppState'
+import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
+import { AppImage, Kicker, LinkButton } from '@/shared/ui/ui'
+import { Reveal } from '@/shared/ui/Reveal'
+import { formatPrice } from '@/shared/lib/format'
 
 const STEPS = [
   {

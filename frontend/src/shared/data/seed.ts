@@ -4,11 +4,9 @@ import type {
   DayAvailability,
   Professional,
   Service,
-  ServiceCategory,
-  ServiceCategoryId,
   SiteContent,
   WeeklyAvailability,
-} from '../shared/types'
+} from '@/shared/types'
 
 /**
  * "Hoy" del prototipo. Los datos de ejemplo giran en torno a esta fecha
@@ -16,17 +14,6 @@ import type {
  * cuenten la misma historia.
  */
 export const TODAY_ISO = '2026-09-01'
-
-export const serviceCategories: ServiceCategory[] = [
-  { id: 'unas', label: 'Uñas' },
-  { id: 'cabello', label: 'Cabello' },
-  { id: 'piel', label: 'Piel' },
-  { id: 'diagnostico', label: 'Diagnóstico' },
-]
-
-export function categoryLabel(id: ServiceCategoryId): string {
-  return serviceCategories.find((c) => c.id === id)?.label ?? id
-}
 
 function day(
   enabled: boolean,

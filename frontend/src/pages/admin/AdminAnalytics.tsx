@@ -1,7 +1,7 @@
-import { monthlyBookingTrend, topServices } from '../../data/adminStats'
-import { serviceCategories } from '../../data/seed'
-import { useAppState } from '../../state/AppState'
-import { Card } from '../../shared/ui/ui'
+import { monthlyBookingTrend, topServices } from '@/shared/data/adminStats'
+import { serviceCategories } from '@/modules/servicios/domain/serviceCategories'
+import { useAppState } from '@/shared/state/AppState'
+import { Card } from '@/shared/ui/ui'
 
 export default function AdminAnalytics() {
   const { services } = useAppState()

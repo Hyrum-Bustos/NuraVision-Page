@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { useToast } from '../state/Toast'
-import { Avatar, Button, Kicker } from '../shared/ui/ui'
+import { useAppState } from '@/shared/state/AppState'
+import { useToast } from '@/shared/state/Toast'
+import { Avatar, Button, Kicker } from '@/shared/ui/ui'
 
 export default function Profile() {
   const { currentUser } = useAppState()

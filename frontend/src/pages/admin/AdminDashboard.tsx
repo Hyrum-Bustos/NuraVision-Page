@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { CalendarCheck, Clock, TrendingDown, Users } from 'lucide-react'
-import { useAppState } from '../../state/AppState'
-import { dashboardStats, monthlyBookingTrend, topServices } from '../../data/adminStats'
-import { BookingsTable } from '../../shared/components/BookingsTable'
-import { Card, StatCard } from '../../shared/ui/ui'
-import type { BookingStatus } from '../../shared/types'
+import { useAppState } from '@/shared/state/AppState'
+import { dashboardStats, monthlyBookingTrend, topServices } from '@/shared/data/adminStats'
+import { BookingsTable } from '@/shared/components/BookingsTable'
+import { Card, StatCard } from '@/shared/ui/ui'
+import type { BookingStatus } from '@/shared/types'
 
 const STATUS_OPTIONS: { value: BookingStatus | 'todos'; label: string }[] = [
   { value: 'todos', label: 'Todos los estados' },

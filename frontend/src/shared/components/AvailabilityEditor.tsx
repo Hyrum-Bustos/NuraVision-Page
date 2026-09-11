@@ -1,7 +1,7 @@
 import { Plus, X } from 'lucide-react'
-import { createId } from '../../lib/id'
-import { minutesToTime, timeToMinutes } from '../../lib/availability'
-import type { DayAvailability, Weekday, WeeklyAvailability } from '../types'
+import { createId } from '@/shared/lib/id'
+import { minutesToTime, timeToMinutes } from '@/shared/lib/availability'
+import type { DayAvailability, Weekday, WeeklyAvailability } from '@/shared/types'
 
 /** Lunes primero, como se lee un horario. */
 const WEEK_ORDER: { weekday: Weekday; label: string }[] = [

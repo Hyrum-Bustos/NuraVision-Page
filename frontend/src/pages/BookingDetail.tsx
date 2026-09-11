@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { useToast } from '../state/Toast'
-import { ConfirmDialog } from '../shared/ui/Modal'
-import { getMonthDays, getSlotsForDate } from '../lib/availability'
-import { Calendar } from '../shared/components/Calendar'
-import { TimeSlotGrid } from '../shared/components/TimeSlotGrid'
-import { Button, StatusBadge } from '../shared/ui/ui'
-import { formatLongDate, formatPrice, monthLabel } from '../lib/format'
+import { useAppState } from '@/shared/state/AppState'
+import { useToast } from '@/shared/state/Toast'
+import { ConfirmDialog } from '@/shared/ui/Modal'
+import { getMonthDays, getSlotsForDate } from '@/shared/lib/availability'
+import { Calendar } from '@/shared/components/Calendar'
+import { TimeSlotGrid } from '@/shared/components/TimeSlotGrid'
+import { Button, StatusBadge } from '@/shared/ui/ui'
+import { formatLongDate, formatPrice, monthLabel } from '@/shared/lib/format'
 
 export default function BookingDetail() {
   const { id } = useParams()

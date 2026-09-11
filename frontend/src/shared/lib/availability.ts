@@ -5,8 +5,8 @@ import type {
   Professional,
   SlotStatus,
   Weekday,
-} from '../shared/types'
-import { TODAY_ISO } from '../data/seed'
+} from '@/shared/types'
+import { TODAY_ISO } from '@/shared/data/seed'
 import { parseISODate, toISODate, WEEKDAYS_SHORT } from './format'
 
 const STEP_MIN = 30

@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAppState } from '../../state/AppState'
-import { TODAY_ISO } from '../../data/seed'
-import { getMonthDays, getSlotsForDate } from '../../lib/availability'
-import { getWeekDates, parseISODate, WEEKDAYS_SHORT } from '../../lib/format'
-import { Button, StatusBadge } from '../../shared/ui/ui'
-import type { Booking, Professional } from '../../shared/types'
+import { useAppState } from '@/shared/state/AppState'
+import { TODAY_ISO } from '@/shared/data/seed'
+import { getMonthDays, getSlotsForDate } from '@/shared/lib/availability'
+import { getWeekDates, parseISODate, WEEKDAYS_SHORT } from '@/shared/lib/format'
+import { Button, StatusBadge } from '@/shared/ui/ui'
+import type { Booking, Professional } from '@/shared/types'
 
 type View = 'dia' | 'semana' | 'mes'
 

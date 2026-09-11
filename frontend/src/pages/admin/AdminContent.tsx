@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { AlertTriangle, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useAppState } from '../../state/AppState'
-import { createId } from '../../lib/id'
-import { useToast } from '../../state/Toast'
-import { ConfirmDialog, Modal } from '../../shared/ui/Modal'
-import { ImageUploader } from '../../shared/components/ImageUploader'
-import { ChipMultiSelect, TextAreaField, TextField } from '../../shared/ui/form'
-import { AppImage, Button, Card, Kicker } from '../../shared/ui/ui'
-import type { AiFocusOption, AiTip, SiteContent } from '../../shared/types'
+import { useAppState } from '@/shared/state/AppState'
+import { createId } from '@/shared/lib/id'
+import { useToast } from '@/shared/state/Toast'
+import { ConfirmDialog, Modal } from '@/shared/ui/Modal'
+import { ImageUploader } from '@/shared/components/ImageUploader'
+import { ChipMultiSelect, TextAreaField, TextField } from '@/shared/ui/form'
+import { AppImage, Button, Card, Kicker } from '@/shared/ui/ui'
+import type { AiFocusOption, AiTip, SiteContent } from '@/shared/types'
 
 export default function AdminContent() {
   const { siteContent, updateSiteContent, services, storageWarning } = useAppState()

@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
-import type { BookingStatus } from '../types'
+import type { BookingStatus } from '@/shared/types'
 
 type Variant = 'solid' | 'olive' | 'outline' | 'danger-outline'
 

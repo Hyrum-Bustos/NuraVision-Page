@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CalendarCheck, Clock, Coffee, TrendingUp } from 'lucide-react'
-import { useAppState } from '../../state/AppState'
-import { TODAY_ISO } from '../../data/seed'
-import { getDayAvailability, getScheduleBlocks, timeToMinutes } from '../../lib/availability'
-import { formatWeekdayLong } from '../../lib/format'
-import { Button, Card, StatCard, StatusBadge } from '../../shared/ui/ui'
+import { useAppState } from '@/shared/state/AppState'
+import { TODAY_ISO } from '@/shared/data/seed'
+import { getDayAvailability, getScheduleBlocks, timeToMinutes } from '@/shared/lib/availability'
+import { formatWeekdayLong } from '@/shared/lib/format'
+import { Button, Card, StatCard, StatusBadge } from '@/shared/ui/ui'
 
 export default function ProDashboard() {
   const { currentUser, bookings, getProfessional, getService } = useAppState()

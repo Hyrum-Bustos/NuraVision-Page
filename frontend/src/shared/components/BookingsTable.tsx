@@ -1,7 +1,7 @@
-import { useAppState } from '../../state/AppState'
-import { formatDayMonthShort } from '../../lib/format'
-import { StatusBadge } from '../ui/ui'
-import type { Booking } from '../types'
+import { useAppState } from '@/shared/state/AppState'
+import { formatDayMonthShort } from '@/shared/lib/format'
+import { StatusBadge } from '@/shared/ui/ui'
+import type { Booking } from '@/shared/types'
 
 export function BookingsTable({ bookings }: { bookings: Booking[] }) {
   const { getService, getProfessional } = useAppState()

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { LogOut, Menu, X, type LucideIcon } from 'lucide-react'
-import { useAppState } from '../../state/AppState'
+import { useAppState } from '@/shared/state/AppState'
 
 export interface NavItem {
   to: string
