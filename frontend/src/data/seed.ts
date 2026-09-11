@@ -8,7 +8,7 @@ import type {
   ServiceCategoryId,
   SiteContent,
   WeeklyAvailability,
-} from '../types'
+} from '../shared/types'
 
 /**
  * "Hoy" del prototipo. Los datos de ejemplo giran en torno a esta fecha

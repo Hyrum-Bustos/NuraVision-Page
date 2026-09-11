@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarX } from 'lucide-react'
 import { useAppState } from '../state/AppState'
-import { EmptyState, LinkButton, StatusBadge, UnderlineTabs } from '../components/ui'
+import { EmptyState, LinkButton, StatusBadge, UnderlineTabs } from '../shared/ui/ui'
 import { formatDayMonthShort, formatPrice } from '../lib/format'
 
 type Tab = 'proximas' | 'completadas' | 'canceladas'

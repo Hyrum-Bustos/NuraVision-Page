@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAppState } from '../../state/AppState'
 import { useToast } from '../../state/Toast'
-import { AppImage, Button } from '../../components/ui'
+import { AppImage, Button } from '../../shared/ui/ui'
 
 export default function ProProfile() {
   const { currentUser, getProfessional, updateProfessional } = useAppState()

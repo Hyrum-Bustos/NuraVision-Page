@@ -1,6 +1,6 @@
 import { Plus, X } from 'lucide-react'
-import { createId } from '../lib/id'
-import { minutesToTime, timeToMinutes } from '../lib/availability'
+import { createId } from '../../lib/id'
+import { minutesToTime, timeToMinutes } from '../../lib/availability'
 import type { DayAvailability, Weekday, WeeklyAvailability } from '../types'
 
 /** Lunes primero, como se lee un horario. */

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
 import { useToast } from '../state/Toast'
-import { Avatar, Button, Kicker } from '../components/ui'
+import { Avatar, Button, Kicker } from '../shared/ui/ui'
 
 export default function Profile() {
   const { currentUser } = useAppState()

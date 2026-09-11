@@ -5,7 +5,7 @@ import type {
   Professional,
   SlotStatus,
   Weekday,
-} from '../types'
+} from '../shared/types'
 import { TODAY_ISO } from '../data/seed'
 import { parseISODate, toISODate, WEEKDAYS_SHORT } from './format'
 

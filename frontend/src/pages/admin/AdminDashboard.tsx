@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react'
 import { CalendarCheck, Clock, TrendingDown, Users } from 'lucide-react'
 import { useAppState } from '../../state/AppState'
 import { dashboardStats, monthlyBookingTrend, topServices } from '../../data/adminStats'
-import { BookingsTable } from '../../components/BookingsTable'
-import { Card, StatCard } from '../../components/ui'
-import type { BookingStatus } from '../../types'
+import { BookingsTable } from '../../shared/components/BookingsTable'
+import { Card, StatCard } from '../../shared/ui/ui'
+import type { BookingStatus } from '../../shared/types'
 
 const STATUS_OPTIONS: { value: BookingStatus | 'todos'; label: string }[] = [
   { value: 'todos', label: 'Todos los estados' },

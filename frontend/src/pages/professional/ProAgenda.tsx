@@ -4,8 +4,8 @@ import { useAppState } from '../../state/AppState'
 import { TODAY_ISO } from '../../data/seed'
 import { getMonthDays, getSlotsForDate } from '../../lib/availability'
 import { getWeekDates, parseISODate, WEEKDAYS_SHORT } from '../../lib/format'
-import { Button, StatusBadge } from '../../components/ui'
-import type { Booking, Professional } from '../../types'
+import { Button, StatusBadge } from '../../shared/ui/ui'
+import type { Booking, Professional } from '../../shared/types'
 
 type View = 'dia' | 'semana' | 'mes'
 

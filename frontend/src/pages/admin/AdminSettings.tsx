@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useAppState } from '../../state/AppState'
 import { useToast } from '../../state/Toast'
-import { ConfirmDialog } from '../../components/Modal'
-import { Button, Card, Kicker } from '../../components/ui'
+import { ConfirmDialog } from '../../shared/ui/Modal'
+import { Button, Card, Kicker } from '../../shared/ui/ui'
 
 export default function AdminSettings() {
   const [name, setName] = useState('Estudio Nura')

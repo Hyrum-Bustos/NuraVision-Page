@@ -3,10 +3,10 @@ import { AlertTriangle } from 'lucide-react'
 import { useAppState } from '../../state/AppState'
 import { useToast } from '../../state/Toast'
 import { TODAY_ISO } from '../../data/seed'
-import { AvailabilityEditor } from '../../components/AvailabilityEditor'
-import { Button } from '../../components/ui'
+import { AvailabilityEditor } from '../../shared/components/AvailabilityEditor'
+import { Button } from '../../shared/ui/ui'
 import { parseISODate } from '../../lib/format'
-import type { WeeklyAvailability } from '../../types'
+import type { WeeklyAvailability } from '../../shared/types'
 
 export default function ProAvailability() {
   const { currentUser, getProfessional, updateProfessional, bookings } = useAppState()

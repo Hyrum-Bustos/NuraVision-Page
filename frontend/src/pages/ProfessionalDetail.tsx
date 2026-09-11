@@ -2,7 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
 import { TODAY_ISO } from '../data/seed'
 import { getSlotsForDate } from '../lib/availability'
-import { AppImage, Kicker } from '../components/ui'
+import { AppImage, Kicker } from '../shared/ui/ui'
 import { formatPrice, getWeekDates, parseISODate, WEEKDAYS_SHORT } from '../lib/format'
 
 export default function ProfessionalDetail() {

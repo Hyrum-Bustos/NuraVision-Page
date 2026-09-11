@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useAppState } from '../../state/AppState'
 import { formatDayMonthShort } from '../../lib/format'
-import { StatusBadge } from '../../components/ui'
+import { StatusBadge } from '../../shared/ui/ui'
 
 export default function ProHistory() {
   const { currentUser, bookings, getService } = useAppState()

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAppState } from '../../state/AppState'
-import { BookingsTable } from '../../components/BookingsTable'
-import type { BookingStatus } from '../../types'
+import { BookingsTable } from '../../shared/components/BookingsTable'
+import type { BookingStatus } from '../../shared/types'
 
 const STATUS_OPTIONS: { value: BookingStatus | 'todos'; label: string }[] = [
   { value: 'todos', label: 'Todos los estados' },

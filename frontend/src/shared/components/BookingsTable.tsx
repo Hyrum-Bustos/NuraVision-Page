@@ -1,6 +1,6 @@
-import { useAppState } from '../state/AppState'
-import { formatDayMonthShort } from '../lib/format'
-import { StatusBadge } from './ui'
+import { useAppState } from '../../state/AppState'
+import { formatDayMonthShort } from '../../lib/format'
+import { StatusBadge } from '../ui/ui'
 import type { Booking } from '../types'
 
 export function BookingsTable({ bookings }: { bookings: Booking[] }) {

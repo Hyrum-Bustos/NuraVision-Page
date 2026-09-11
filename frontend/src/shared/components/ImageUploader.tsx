@@ -5,8 +5,8 @@ import {
   fileToStorableDataUrl,
   formatBytes,
   ImageError,
-} from '../lib/image'
-import { Field } from './form'
+} from '../../lib/image'
+import { Field } from '../ui/form'
 
 export function ImageUploader({
   label,

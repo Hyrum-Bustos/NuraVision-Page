@@ -1,8 +1,8 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { categoryLabel } from '../data/seed'
-import { AppImage, Avatar, Button, Kicker, Placeholder } from '../components/ui'
-import { formatPrice } from '../lib/format'
+import { useAppState } from '../../../state/AppState'
+import { categoryLabel } from '../../../data/seed'
+import { AppImage, Avatar, Button, Kicker, Placeholder } from '../../../shared/ui/ui'
+import { formatPrice } from '../../../lib/format'
 
 export default function ServiceDetail() {
   const { id } = useParams()

@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { categoryLabel, serviceCategories } from '../data/seed'
+import { useAppState } from '../../../state/AppState'
+import { categoryLabel, serviceCategories } from '../../../data/seed'
 import { SearchX } from 'lucide-react'
-import { AppImage, Button, EmptyState, FilterPills, Kicker } from '../components/ui'
-import { formatPrice } from '../lib/format'
-import type { ServiceCategoryId } from '../types'
+import { AppImage, Button, EmptyState, FilterPills, Kicker } from '../../../shared/ui/ui'
+import { formatPrice } from '../../../lib/format'
+import type { ServiceCategoryId } from '../../../shared/types'
 
 type Filter = 'todos' | ServiceCategoryId
 

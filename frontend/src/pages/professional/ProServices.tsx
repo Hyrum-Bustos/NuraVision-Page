@@ -1,6 +1,6 @@
 import { useAppState } from '../../state/AppState'
 import { categoryLabel } from '../../data/seed'
-import { AppImage, Card, Kicker } from '../../components/ui'
+import { AppImage, Card, Kicker } from '../../shared/ui/ui'
 import { formatPrice } from '../../lib/format'
 
 export default function ProServices() {

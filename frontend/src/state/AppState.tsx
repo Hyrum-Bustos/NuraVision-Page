@@ -18,7 +18,7 @@ import type {
   Role,
   Service,
   SiteContent,
-} from '../types'
+} from '../shared/types'
 import { createSeedData } from '../data/seed'
 import { clearStoredData, loadStoredData, saveStoredData } from '../lib/storage'
 import { createId } from '../lib/id'

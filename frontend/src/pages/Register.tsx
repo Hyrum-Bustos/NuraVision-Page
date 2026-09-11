@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
-import { Button } from '../components/ui'
+import { Button } from '../shared/ui/ui'
 
 export default function Register() {
   const { login } = useAppState()

@@ -1,4 +1,4 @@
-import type { Slot } from '../lib/availability'
+import type { Slot } from '../../lib/availability'
 
 const STATUS_STYLE: Record<Slot['status'], string> = {
   disponible: 'bg-olive-50 text-ink hover:bg-olive-100 cursor-pointer',

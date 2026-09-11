@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { DayStatus } from '../types'
-import { parseISODate } from '../lib/format'
+import { parseISODate } from '../../lib/format'
 
 const WEEKDAY_HEADERS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
