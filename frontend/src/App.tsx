@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   LayoutDashboard,
   Settings,
+  ShieldCheck,
   Sparkles,
   UserCircle,
   Users,
@@ -42,6 +43,7 @@ import ProProfile from './pages/professional/ProProfile'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminClients from './pages/admin/AdminClients'
+import AdminUsers from './pages/admin/AdminUsers'
 import AdminProfessionals from './pages/admin/AdminProfessionals'
 import AdminServices from './pages/admin/AdminServices'
 import AdminContent from './pages/admin/AdminContent'
@@ -61,6 +63,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/reservas', label: 'Reservas', icon: ClipboardList },
   { to: '/admin/clientes', label: 'Clientes', icon: Users },
+  { to: '/admin/usuarios', label: 'Usuarios', icon: ShieldCheck },
   { to: '/admin/profesionales', label: 'Profesionales', icon: UserCircle },
   { to: '/admin/servicios', label: 'Servicios', icon: Sparkles },
   { to: '/admin/contenido', label: 'Contenido', icon: ImageIcon },
@@ -123,6 +126,7 @@ export default function App() {
                 <Route path="admin" element={<AdminDashboard />} />
                 <Route path="admin/reservas" element={<AdminBookings />} />
                 <Route path="admin/clientes" element={<AdminClients />} />
+                <Route path="admin/usuarios" element={<AdminUsers />} />
                 <Route path="admin/profesionales" element={<AdminProfessionals />} />
                 <Route path="admin/servicios" element={<AdminServices />} />
                 <Route path="admin/contenido" element={<AdminContent />} />

@@ -14,6 +14,7 @@ export function loadStoredData(fallback: AppData): AppData {
     if (!parsed || typeof parsed !== 'object') return fallback
 
     return {
+      users: Array.isArray(parsed.users) ? parsed.users : fallback.users,
       services: Array.isArray(parsed.services) ? parsed.services : fallback.services,
       professionals: Array.isArray(parsed.professionals)
         ? parsed.professionals
