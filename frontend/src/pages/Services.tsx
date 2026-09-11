@@ -10,7 +10,7 @@ import type { ServiceCategoryId } from '../types'
 type Filter = 'todos' | ServiceCategoryId
 
 export default function Services() {
-  const { services, setBookingDraft } = useAppState()
+  const { activeServices: services, setBookingDraft } = useAppState()
   const [category, setCategory] = useState<Filter>('todos')
   const navigate = useNavigate()
 

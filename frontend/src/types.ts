@@ -15,6 +15,11 @@ export interface Service {
   price: number
   includes: string[]
   imageUrl?: string
+  /**
+   * Un servicio inactivo se conserva para el historial y las reservas ya
+   * tomadas, pero deja de ofrecerse a los clientes para nuevas reservas.
+   */
+  active: boolean
 }
 
 /** 0 = domingo … 6 = sábado (mismo índice que Date.getDay). */

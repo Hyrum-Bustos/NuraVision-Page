@@ -26,7 +26,7 @@ export default function BookingFlow() {
     bookingDraft,
     setBookingDraft,
     addBooking,
-    services,
+    activeServices: services,
     bookings,
     getService,
     getProfessional,
