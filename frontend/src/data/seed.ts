@@ -1,5 +1,6 @@
 import type {
   AppData,
+  AppUser,
   Booking,
   DayAvailability,
   Professional,
@@ -437,9 +438,28 @@ export const seedSiteContent: SiteContent = {
   ],
 }
 
+/**
+ * Usuarios registrados. Los clientes corresponden a quienes aparecen en las
+ * reservas semilla y los profesionales se enlazan con su ficha del equipo.
+ */
+export const seedUsers: AppUser[] = [
+  { id: 'usr-0001', firstName: 'Camila', lastName: 'Torres', email: 'camila.torres@correo.cl', phone: '+56 9 6543 2109', role: 'cliente', active: true, createdAt: '2025-11-04' },
+  { id: 'usr-0002', firstName: 'Antonia', lastName: 'Vera', email: 'antonia.vera@correo.cl', phone: '+56 9 8123 4455', role: 'cliente', active: true, createdAt: '2026-01-19' },
+  { id: 'usr-0003', firstName: 'Fernanda', lastName: 'Alarcón', email: 'fernanda.alarcon@correo.cl', phone: '+56 9 7788 1020', role: 'cliente', active: true, createdAt: '2026-03-02' },
+  { id: 'usr-0004', firstName: 'Josefina', lastName: 'Rojas', email: 'josefina.rojas@correo.cl', phone: '+56 9 9012 3344', role: 'cliente', active: true, createdAt: '2026-04-27' },
+  { id: 'usr-0005', firstName: 'Matías', lastName: 'Cortés', email: 'matias.cortes@correo.cl', phone: '+56 9 5566 7788', role: 'cliente', active: true, createdAt: '2026-06-11' },
+  { id: 'usr-0006', firstName: 'Sofía', lastName: 'Bravo', email: 'sofia.bravo@correo.cl', phone: '+56 9 4433 2211', role: 'cliente', active: false, createdAt: '2026-07-08' },
+  { id: 'usr-0007', firstName: 'Camila', lastName: 'Reyes', email: 'camila.reyes@estudionura.cl', phone: '+56 9 3344 5566', role: 'profesional', active: true, createdAt: '2025-08-01', professionalId: 'camila-reyes' },
+  { id: 'usr-0008', firstName: 'Valentina', lastName: 'Soto', email: 'valentina.soto@estudionura.cl', phone: '+56 9 2233 4455', role: 'profesional', active: true, createdAt: '2025-08-01', professionalId: 'valentina-soto' },
+  { id: 'usr-0009', firstName: 'Josefa', lastName: 'Miranda', email: 'josefa.miranda@estudionura.cl', phone: '+56 9 1122 3344', role: 'profesional', active: true, createdAt: '2025-09-15', professionalId: 'josefa-miranda' },
+  { id: 'usr-0010', firstName: 'Andrés', lastName: 'Fuentes', email: 'andres.fuentes@estudionura.cl', phone: '+56 9 6677 8899', role: 'profesional', active: true, createdAt: '2026-02-03', professionalId: 'andres-fuentes' },
+  { id: 'usr-0011', firstName: 'Paula', lastName: 'Núñez', email: 'paula.nunez@estudionura.cl', phone: '+56 9 9988 7766', role: 'administrador', active: true, createdAt: '2025-07-20' },
+]
+
 export function createSeedData(): AppData {
   // Copia profunda: el estado es mutable y no debe tocar las constantes semilla.
   return structuredClone({
+    users: seedUsers,
     services: seedServices,
     professionals: seedProfessionals,
     bookings: seedBookings,

@@ -97,6 +97,24 @@ export interface SiteContent {
 
 export type Role = 'cliente' | 'profesional' | 'administrador'
 
+/**
+ * Usuario registrado en la plataforma. Es distinto de `Professional`: aquí
+ * viven las credenciales y el rol, allá la ficha pública del equipo. Un
+ * usuario con rol profesional se enlaza con su ficha por `professionalId`.
+ */
+export interface AppUser {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  role: Role
+  /** Un usuario inactivo se conserva, pero no debería poder operar. */
+  active: boolean
+  createdAt: string
+  professionalId?: string
+}
+
 export interface CurrentUser {
   role: Role
   name: string
@@ -131,6 +149,7 @@ export interface DayStatus {
 
 /** Datos editables del prototipo, persistidos en el navegador. */
 export interface AppData {
+  users: AppUser[]
   services: Service[]
   professionals: Professional[]
   bookings: Booking[]

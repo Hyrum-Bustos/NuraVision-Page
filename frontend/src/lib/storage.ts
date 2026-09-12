@@ -14,6 +14,7 @@ export function loadStoredData(fallback: AppData): AppData {
     if (!parsed || typeof parsed !== 'object') return fallback
 
     return {
+      users: Array.isArray(parsed.users) ? parsed.users : fallback.users,
       // `active` se agregó después: lo guardado antes no lo trae y se asume activo.
       services: Array.isArray(parsed.services)
         ? parsed.services.map((service) => ({ ...service, active: service.active !== false }))

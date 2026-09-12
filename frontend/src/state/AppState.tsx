@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type {
   AppData,
+  AppUser,
   Booking,
   BookingDraft,
   BookingStatus,
@@ -57,6 +58,14 @@ const DEMO_USERS: Record<Role, CurrentUser> = {
 }
 
 interface AppStateValue {
+  // Usuarios registrados
+  users: AppUser[]
+  addUser: (user: Omit<AppUser, 'id' | 'createdAt'>) => AppUser
+  updateUser: (id: string, patch: Partial<Omit<AppUser, 'id'>>) => void
+  deleteUser: (id: string) => void
+  /** Devuelve el usuario que ya usa ese correo, ignorando al que se edita. */
+  findUserByEmail: (email: string, exceptId?: string) => AppUser | undefined
+
   // Sesión
   currentUser: CurrentUser | null
   login: (role: Role) => void
@@ -123,6 +132,28 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((role: Role) => setCurrentUser(DEMO_USERS[role]), [])
   const logout = useCallback(() => setCurrentUser(null), [])
+
+  // --- Usuarios ---
+  const addUser = useCallback((user: Omit<AppUser, 'id' | 'createdAt'>) => {
+    const created: AppUser = {
+      ...user,
+      id: createId('usr'),
+      createdAt: new Date().toISOString().slice(0, 10),
+    }
+    setData((prev) => ({ ...prev, users: [...prev.users, created] }))
+    return created
+  }, [])
+
+  const updateUser = useCallback((id: string, patch: Partial<Omit<AppUser, 'id'>>) => {
+    setData((prev) => ({
+      ...prev,
+      users: prev.users.map((u) => (u.id === id ? { ...u, ...patch } : u)),
+    }))
+  }, [])
+
+  const deleteUser = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, users: prev.users.filter((u) => u.id !== id) }))
+  }, [])
 
   // --- Servicios ---
   const addService = useCallback((service: Omit<Service, 'id'>) => {
@@ -225,6 +256,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const getProfessional = (id: string) => data.professionals.find((p) => p.id === id)
 
     return {
+      users: data.users,
+      addUser,
+      updateUser,
+      deleteUser,
+      findUserByEmail: (email, exceptId) =>
+        data.users.find(
+          (u) => u.id !== exceptId && u.email.trim().toLowerCase() === email.trim().toLowerCase(),
+        ),
+
       currentUser,
       login,
       logout,
@@ -266,6 +306,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     currentUser,
     login,
     logout,
+    addUser,
+    updateUser,
+    deleteUser,
     addService,
     updateService,
     deleteService,
