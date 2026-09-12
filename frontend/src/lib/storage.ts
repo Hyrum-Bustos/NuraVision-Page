@@ -1,6 +1,9 @@
 import type { AppData } from '../types'
 
-const STORAGE_KEY = 'nuravision:data:v1'
+// v2: los datos semilla incorporaron usuarios registrados, el estado activo de
+// los servicios y el historial de atenciones que alimenta la analítica. Subir
+// la versión descarta lo guardado con el modelo anterior en vez de mezclarlo.
+const STORAGE_KEY = 'nuravision:data:v2'
 
 export type SaveResult = { ok: true } | { ok: false; reason: 'quota' | 'unavailable' }
 
