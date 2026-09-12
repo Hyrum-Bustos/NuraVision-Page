@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppState } from '@/shared/state/AppState'
 import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
-import { useProfesionales } from '@/modules/profesionales/ui/useProfesionales'
+import { useProfesionalesPorServicio } from '@/modules/profesionales/ui/useProfesionalesPorServicio'
 import { AppImage, Avatar, Button, Kicker, Placeholder } from '@/shared/ui/ui'
 import { formatPrice } from '@/shared/lib/format'
 import type { ServiceCategoryId } from '@/shared/types'
@@ -59,7 +59,7 @@ export default function ServiceDetail() {
     profesionales,
     cargando: cargandoProfesionales,
     error: errorProfesionales,
-  } = useProfesionales()
+  } = useProfesionalesPorServicio(id)
 
   if (resultado.estado === 'cargando') {
     return <Aviso mensaje="Cargando servicio…" />
@@ -120,12 +120,8 @@ export default function ServiceDetail() {
             </div>
           )}
 
-          {/* El titulo dice "del estudio" y no "que lo realizan" a proposito: la
-              tabla puente profesional_servicios no cruza con profesionales
-              (uuid contra bigint), asi que no hay forma de saber quien realiza
-              este servicio. Prometerlo en el encabezado seria mentir. */}
           <div className="mt-8 border-t border-line-soft pt-6">
-            <Kicker>Profesionales del estudio</Kicker>
+            <Kicker>Profesionales que lo realizan</Kicker>
 
             {cargandoProfesionales && (
               <p className="mt-3 text-sm text-muted">Cargando profesionales…</p>
@@ -139,7 +135,7 @@ export default function ServiceDetail() {
 
             {!cargandoProfesionales && !errorProfesionales && profesionales.length === 0 && (
               <p className="mt-3 text-sm text-muted">
-                Todavía no hay profesionales cargados en el catálogo.
+                Este servicio aún no tiene profesionales asignados.
               </p>
             )}
 

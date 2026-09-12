@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppState } from '@/shared/state/AppState'
 import { useToast } from '@/shared/state/Toast'
@@ -6,7 +6,8 @@ import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
 import type { Servicio } from '@/modules/servicios/domain/servicio.types'
 import { useServicioDetalle } from '@/modules/servicios/ui/useServicioDetalle'
 import { useServicios } from '@/modules/servicios/ui/useServicios'
-import { useProfesionales } from '@/modules/profesionales/ui/useProfesionales'
+import { useProfesionalesPorServicio } from '@/modules/profesionales/ui/useProfesionalesPorServicio'
+import { useDisponibilidad } from '@/modules/profesionales/ui/useDisponibilidad'
 import { getMonthDays, getSlotsForDate } from '@/shared/lib/availability'
 import { Stepper } from '@/shared/ui/Stepper'
 import { useScrollToTopOnChange } from '@/shared/components/ScrollToTop'
@@ -15,6 +16,7 @@ import { TimeSlotGrid } from '@/shared/components/TimeSlotGrid'
 import { AppImage, Avatar, Button, Kicker } from '@/shared/ui/ui'
 import { formatLongDate, formatPrice, formatWeekdayLong, monthLabel } from '@/shared/lib/format'
 import type { Booking, Professional, ServiceCategoryId } from '@/shared/types'
+import type { Profesional } from '@/modules/profesionales/domain/profesional.types'
 
 type Step = 'service' | 'professional' | 'date' | 'time' | 'confirm'
 
@@ -76,14 +78,7 @@ function Aviso({
 }
 
 export default function BookingFlow() {
-  const {
-    currentUser,
-    bookingDraft,
-    setBookingDraft,
-    addBooking,
-    bookings,
-    getProfessional,
-  } = useAppState()
+  const { currentUser, bookingDraft, setBookingDraft, addBooking, bookings } = useAppState()
   const navigate = useNavigate()
   const { toast } = useToast()
   const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
@@ -91,8 +86,31 @@ export default function BookingFlow() {
     null,
   )
 
-  // El servicio elegido se lee de la base de datos, no de los datos de ejemplo.
+  // Servicio, profesionales y horario salen de la base, no de los seeds.
   const servicioState = useServicioDetalle(bookingDraft.serviceId)
+  const profesionalesState = useProfesionalesPorServicio(bookingDraft.serviceId)
+  const disponibilidad = useDisponibilidad(bookingDraft.professionalId)
+
+  /**
+   * El calculo de horas (getMonthDays, getSlotsForDate) espera el `Professional`
+   * del prototipo. En vez de duplicar esa logica, se arma uno con los datos de
+   * la base y el horario ya convertido: asi la agenda sigue siendo el mismo
+   * codigo, probado, y solo cambia de donde salen los datos.
+   */
+  const professional: Professional | undefined = useMemo(() => {
+    const elegido = profesionalesState.profesionales.find((p) => p.id === bookingDraft.professionalId)
+    if (!elegido) return undefined
+    return {
+      id: elegido.id,
+      name: elegido.nombre,
+      role: elegido.especialidad,
+      experienceYears: 0,
+      bio: '',
+      serviceIds: [],
+      imageUrl: elegido.avatarUrl ?? undefined,
+      availability: disponibilidad.horario,
+    }
+  }, [profesionalesState.profesionales, bookingDraft.professionalId, disponibilidad.horario])
 
   // El aviso se emite una sola vez: en desarrollo StrictMode monta el efecto
   // dos veces y, sin esta guarda, el toast aparecía duplicado.
@@ -133,9 +151,6 @@ export default function BookingFlow() {
   }
 
   const service = servicioState.estado === 'listo' ? toVista(servicioState.servicio) : undefined
-  const professional = bookingDraft.professionalId
-    ? getProfessional(bookingDraft.professionalId)
-    : undefined
 
   const stepIndex = { service: 0, professional: 1, date: 2, time: 3, confirm: 4 }[step]
 
@@ -165,9 +180,13 @@ export default function BookingFlow() {
   // puede pintar nada coherente debajo del Stepper.
   const esperandoServicio = step !== 'service' && servicioState.estado !== 'listo'
 
-  // El profesional elegido existe en la base pero no en los datos de ejemplo,
-  // que son los que aportan la disponibilidad semanal.
-  const sinAgenda = !esperandoServicio && step !== 'service' && step !== 'professional' && !professional
+  // De la fecha en adelante todo depende del horario del profesional: si aún
+  // no llega, falta o falló, no hay fechas que ofrecer.
+  const pasosConAgenda = step === 'date' || step === 'time' || step === 'confirm'
+  const esperandoHorario =
+    !esperandoServicio &&
+    pasosConAgenda &&
+    (disponibilidad.cargando || disponibilidad.error !== null || disponibilidad.sinHorario)
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
@@ -207,25 +226,38 @@ export default function BookingFlow() {
       {step === 'professional' && service && (
         <ProfessionalStep
           service={service}
+          profesionales={profesionalesState.profesionales}
+          cargando={profesionalesState.cargando}
+          error={profesionalesState.error}
           onBack={() => clearFrom('service')}
           onSelect={(professionalId) => setBookingDraft((d) => ({ ...d, professionalId }))}
         />
       )}
 
-      {/* Se eligio un profesional de la base, pero la agenda se calcula con la
-          disponibilidad semanal de los datos de ejemplo y la tabla
-          `profesionales` no tiene columnas de horario. Sin este aviso, los
-          pasos siguientes no renderizarian nada y la pantalla quedaria en
-          blanco bajo el Stepper. */}
-      {sinAgenda && (
+      {esperandoHorario && disponibilidad.cargando && (
+        <Aviso titulo="Cargando la agenda…" descripcion="Estamos leyendo el horario del profesional." />
+      )}
+
+      {esperandoHorario && disponibilidad.error && (
         <Aviso
-          titulo="Este profesional todavía no tiene agenda"
-          descripcion="Su horario aún no está en la base de datos, así que no podemos mostrar fechas ni horas disponibles."
+          titulo="No pudimos cargar la agenda"
+          descripcion={disponibilidad.error}
           accion={{ label: 'Elegir otro profesional', onClick: () => clearFrom('professional') }}
         />
       )}
 
-      {step === 'date' && service && professional && (
+      {/* El profesional existe pero no tiene ni un bloque en `disponibilidad`:
+          sin horario no hay fechas que ofrecer. Sin este aviso los pasos
+          siguientes no renderizarian nada y la pantalla quedaria en blanco. */}
+      {esperandoHorario && disponibilidad.sinHorario && (
+        <Aviso
+          titulo="Este profesional todavía no tiene agenda"
+          descripcion="Aún no tiene horarios cargados, así que no podemos mostrar fechas ni horas disponibles."
+          accion={{ label: 'Elegir otro profesional', onClick: () => clearFrom('professional') }}
+        />
+      )}
+
+      {step === 'date' && !esperandoHorario && service && professional && (
         <DateStep
           service={service}
           professional={professional}
@@ -237,7 +269,7 @@ export default function BookingFlow() {
         />
       )}
 
-      {step === 'time' && service && professional && bookingDraft.dateISO && (
+      {step === 'time' && !esperandoHorario && service && professional && bookingDraft.dateISO && (
         <TimeStep
           dateISO={bookingDraft.dateISO}
           professional={professional}
@@ -248,7 +280,7 @@ export default function BookingFlow() {
         />
       )}
 
-      {step === 'confirm' && service && professional && bookingDraft.dateISO && bookingDraft.time && (
+      {step === 'confirm' && !esperandoHorario && service && professional && bookingDraft.dateISO && bookingDraft.time && (
         <ConfirmStep
           service={service}
           professionalName={professional.name}
@@ -369,24 +401,25 @@ function ServiceStep({
 
 function ProfessionalStep({
   service,
+  profesionales,
+  cargando,
+  error,
   onBack,
   onSelect,
 }: {
   service: ServicioReservaVista
+  profesionales: Profesional[]
+  cargando: boolean
+  error: string | null
   onBack: () => void
   onSelect: (professionalId: string) => void
 }) {
-  const { profesionales, cargando, error } = useProfesionales()
-
   return (
     <div>
       <BackLink label="Cambiar servicio" onClick={onBack} />
       <h1 className="font-serif-display text-4xl text-ink">¿Con quién?</h1>
-      {/* No se puede decir "que realizan X": la tabla puente no cruza con
-          profesionales, asi que se listan todos los activos del estudio. */}
       <p className="mt-2 text-sm text-muted">
-        Profesionales del estudio disponibles para{' '}
-        <strong className="text-ink">{service.nombre}</strong>.
+        Profesionales que realizan <strong className="text-ink">{service.nombre}</strong>.
       </p>
 
       {cargando && (
@@ -434,7 +467,7 @@ function ProfessionalStep({
 
           {profesionales.length === 0 && (
             <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
-              Todavía no hay profesionales cargados.
+              Este servicio aún no tiene profesionales asignados.
             </p>
           )}
         </>
