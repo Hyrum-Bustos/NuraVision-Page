@@ -8,6 +8,7 @@ import type {
 } from '../types'
 import { TODAY_ISO } from '../data/seed'
 import { parseISODate, toISODate, WEEKDAYS_SHORT } from './format'
+import { seededRandom } from './random'
 
 const STEP_MIN = 30
 
@@ -25,24 +26,6 @@ export function minutesToTime(minutes: number): string {
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-}
-
-/**
- * Ocupación simulada: representa las reservas de otros clientes que no están
- * en los datos de ejemplo. Es determinista, así que la agenda se ve igual
- * cada vez que se abre la misma fecha.
- */
-function hashString(input: string): number {
-  let hash = 2166136261
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
-  }
-  return hash >>> 0
-}
-
-function seededRandom(seed: string): number {
-  return (hashString(seed) % 10000) / 10000
 }
 
 function isWithinBreak(minutes: number, breaks: AvailabilityBreak[]): AvailabilityBreak | undefined {

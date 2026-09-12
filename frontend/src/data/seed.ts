@@ -1,3 +1,4 @@
+import { seededRandom } from '../lib/random'
 import type {
   AppData,
   Booking,
@@ -429,12 +430,73 @@ export const seedSiteContent: SiteContent = {
   ],
 }
 
+/**
+ * Historial de atenciones ya ocurridas. Se genera en vez de escribirse a mano
+ * porque la analítica necesita varios meses de datos para decir algo; el
+ * generador es determinista, así la demo muestra siempre lo mismo.
+ */
+function generateHistoricalBookings(): Booking[] {
+  const clients = [
+    'Camila Torres',
+    'Antonia Vera',
+    'Fernanda Alarcón',
+    'Josefina Rojas',
+    'Matías Cortés',
+    'Sofía Bravo',
+    'Valeria Pinto',
+    'Ignacia Muñoz',
+    'Daniela Sepúlveda',
+    'Rocío Navarro',
+  ]
+  const bookings: Booking[] = []
+  const end = new Date(`${TODAY_ISO}T00:00:00`)
+  const start = new Date(end)
+  start.setMonth(start.getMonth() - 6)
+
+  let seq = 0
+  for (let day = new Date(start); day < end; day.setDate(day.getDate() + 1)) {
+    const weekday = day.getDay()
+    if (weekday === 0) continue // el estudio no abre los domingos
+
+    const iso = day.toISOString().slice(0, 10)
+    // Entre 1 y 4 atenciones por día, con más movimiento hacia el fin de semana.
+    const perDay = 1 + Math.floor(seededRandom(`day-${iso}`) * (weekday >= 5 ? 4 : 3))
+
+    for (let i = 0; i < perDay; i += 1) {
+      const key = `${iso}-${i}`
+      const service = seedServices[Math.floor(seededRandom(`svc-${key}`) * seedServices.length)]
+      const eligible = seedProfessionals.filter((pro) => pro.serviceIds.includes(service.id))
+      if (eligible.length === 0) continue
+      const professional = eligible[Math.floor(seededRandom(`pro-${key}`) * eligible.length)]
+      const roll = seededRandom(`status-${key}`)
+
+      seq += 1
+      bookings.push({
+        id: `b-h${String(seq).padStart(4, '0')}`,
+        code: `NV-${iso.slice(8, 10)}${iso.slice(5, 7)}-${String(2000 + seq)}`,
+        serviceId: service.id,
+        professionalId: professional.id,
+        clientName: clients[Math.floor(seededRandom(`cli-${key}`) * clients.length)],
+        dateISO: iso,
+        time: `${String(10 + Math.floor(seededRandom(`hour-${key}`) * 8)).padStart(2, '0')}:${
+          seededRandom(`min-${key}`) < 0.5 ? '00' : '30'
+        }`,
+        durationMin: service.durationMin,
+        price: service.price,
+        // Una minoría se cancela; el resto se completó.
+        status: roll < 0.07 ? 'cancelada' : 'completada',
+      })
+    }
+  }
+  return bookings
+}
+
 export function createSeedData(): AppData {
   // Copia profunda: el estado es mutable y no debe tocar las constantes semilla.
   return structuredClone({
     services: seedServices,
     professionals: seedProfessionals,
-    bookings: seedBookings,
+    bookings: [...seedBookings, ...generateHistoricalBookings()],
     siteContent: seedSiteContent,
   })
 }
