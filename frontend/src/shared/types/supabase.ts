@@ -54,6 +54,35 @@ export interface Database {
         }
         Relationships: []
       }
+      profesionales: {
+        Row: {
+          /** bigint */
+          id: number
+          /** text */
+          nombre: string
+          /** text */
+          especialidad: string
+          /** text, nullable */
+          avatar_url: string | null
+          /** boolean */
+          activo: boolean
+        }
+        Insert: {
+          id?: number
+          nombre: string
+          especialidad: string
+          avatar_url?: string | null
+          activo?: boolean
+        }
+        Update: {
+          id?: number
+          nombre?: string
+          especialidad?: string
+          avatar_url?: string | null
+          activo?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: Record<never, never>
     Functions: Record<never, never>
