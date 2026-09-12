@@ -13,4 +13,11 @@ export interface ServicioRepository {
 
   /** `null` si no existe (no es un error: es una respuesta valida). */
   obtenerPorId(id: string): Promise<Servicio | null>
+
+  /**
+   * Varios servicios de una vez, para resolver nombres en un listado sin caer
+   * en N+1. Incluye los inactivos a proposito: una reserva antigua puede
+   * apuntar a un servicio dado de baja y su nombre debe seguir mostrandose.
+   */
+  listarPorIds(ids: string[]): Promise<Servicio[]>
 }

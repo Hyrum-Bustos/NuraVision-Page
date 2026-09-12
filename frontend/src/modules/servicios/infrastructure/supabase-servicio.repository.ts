@@ -44,6 +44,24 @@ export class SupabaseServicioRepository implements ServicioRepository {
 
     return data ? toServicio(data) : null
   }
+
+  async listarPorIds(ids: string[]): Promise<Servicio[]> {
+    // Los ids que no son enteros (los slugs del prototipo) se descartan aqui:
+    // no existen en la base y colarlos daria un 400 de PostgREST.
+    const numericos = ids
+      .map((id) => Number(id))
+      .filter((id, i) => ids[i].trim() !== '' && Number.isInteger(id))
+
+    if (numericos.length === 0) return []
+
+    const { data, error } = await supabase.from(TABLA).select('*').in('id', numericos)
+
+    if (error) {
+      throw new Error(`No se pudieron cargar los servicios: ${error.message}`)
+    }
+
+    return (data ?? []).map(toServicio)
+  }
 }
 
 /** Instancia lista para usar; la app no necesita mas de una. */

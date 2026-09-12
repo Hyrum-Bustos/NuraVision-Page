@@ -12,6 +12,13 @@ export interface ProfesionalRepository {
    */
   listarPorServicio(servicioId: string): Promise<Profesional[]>
 
+  /**
+   * Varios profesionales de una vez, para resolver nombres en un listado sin
+   * caer en N+1. Incluye los inactivos a proposito: una reserva antigua puede
+   * apuntar a alguien que ya no atiende y su nombre debe seguir mostrandose.
+   */
+  listarPorIds(ids: string[]): Promise<Profesional[]>
+
   /** Bloques de atencion de un profesional, ordenados por dia y hora. */
   listarDisponibilidad(profesionalId: string): Promise<Disponibilidad[]>
 }

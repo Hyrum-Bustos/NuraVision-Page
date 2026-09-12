@@ -68,6 +68,24 @@ export class SupabaseProfesionalRepository implements ProfesionalRepository {
     return (data ?? []).map(toProfesional)
   }
 
+  async listarPorIds(ids: string[]): Promise<Profesional[]> {
+    // Los ids que no son enteros (los del prototipo) se descartan aqui: no
+    // existen en la base y colarlos daria un 400 de PostgREST.
+    const numericos = ids
+      .map((id) => Number(id))
+      .filter((id, i) => ids[i].trim() !== '' && Number.isInteger(id))
+
+    if (numericos.length === 0) return []
+
+    const { data, error } = await supabase.from(TABLA).select('*').in('id', numericos)
+
+    if (error) {
+      throw new Error(`No se pudieron cargar los profesionales: ${error.message}`)
+    }
+
+    return (data ?? []).map(toProfesional)
+  }
+
   async listarDisponibilidad(profesionalId: string): Promise<Disponibilidad[]> {
     const id = aIdNumerico(profesionalId)
     if (id === null) return []
