@@ -1,6 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppState } from '@/shared/state/AppState'
 import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
+import { useProfesionales } from '@/modules/profesionales/ui/useProfesionales'
 import { AppImage, Avatar, Button, Kicker, Placeholder } from '@/shared/ui/ui'
 import { formatPrice } from '@/shared/lib/format'
 import type { ServiceCategoryId } from '@/shared/types'
@@ -51,9 +52,14 @@ function Aviso({ mensaje }: { mensaje: string }) {
 
 export default function ServiceDetail() {
   const { id } = useParams()
-  const { professionalsForService, setBookingDraft, nextSlotsFor } = useAppState()
+  const { setBookingDraft } = useAppState()
   const navigate = useNavigate()
   const resultado = useServicioDetalle(id)
+  const {
+    profesionales,
+    cargando: cargandoProfesionales,
+    error: errorProfesionales,
+  } = useProfesionales()
 
   if (resultado.estado === 'cargando') {
     return <Aviso mensaje="Cargando servicio…" />
@@ -68,12 +74,6 @@ export default function ServiceDetail() {
   }
 
   const service = toVista(resultado.servicio)
-
-  // Los profesionales siguen viniendo de los datos de ejemplo y se asocian por
-  // el id de servicio del prototipo, que no coincide con el de la base. Hasta
-  // que se migren, esta lista llega vacia y la seccion lo informa.
-  const professionals = professionalsForService(service.id)
-  const nextSlots = professionals[0] ? nextSlotsFor(professionals[0], { count: 4 }) : []
 
   function handleReservar() {
     setBookingDraft(() => ({ serviceId: service.id }))
@@ -120,33 +120,50 @@ export default function ServiceDetail() {
             </div>
           )}
 
+          {/* El titulo dice "del estudio" y no "que lo realizan" a proposito: la
+              tabla puente profesional_servicios no cruza con profesionales
+              (uuid contra bigint), asi que no hay forma de saber quien realiza
+              este servicio. Prometerlo en el encabezado seria mentir. */}
           <div className="mt-8 border-t border-line-soft pt-6">
-            <Kicker>Profesionales que lo realizan</Kicker>
-            {professionals.length === 0 ? (
+            <Kicker>Profesionales del estudio</Kicker>
+
+            {cargandoProfesionales && (
+              <p className="mt-3 text-sm text-muted">Cargando profesionales…</p>
+            )}
+
+            {errorProfesionales && (
               <p className="mt-3 text-sm text-muted">
-                Este servicio aún no tiene profesionales asignados.
+                No pudimos cargar los profesionales: {errorProfesionales}
               </p>
-            ) : (
+            )}
+
+            {!cargandoProfesionales && !errorProfesionales && profesionales.length === 0 && (
+              <p className="mt-3 text-sm text-muted">
+                Todavía no hay profesionales cargados en el catálogo.
+              </p>
+            )}
+
+            {!cargandoProfesionales && !errorProfesionales && profesionales.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-4">
-                {professionals.map((p) => (
+                {profesionales.map((p) => (
                   <Link key={p.id} to={`/profesionales/${p.id}`} className="flex items-center gap-3">
-                    {p.imageUrl ? (
+                    {p.avatarUrl ? (
                       <AppImage
-                        src={p.imageUrl}
-                        alt={p.name}
+                        src={p.avatarUrl}
+                        alt={p.nombre}
                         className="h-9 w-9 shrink-0 rounded-full"
                       />
                     ) : (
                       <Avatar
-                        initials={p.name
+                        initials={p.nombre
                           .split(' ')
                           .map((n) => n[0])
                           .join('')}
                       />
                     )}
                     <div>
-                      <p className="text-sm font-medium text-ink">{p.name}</p>
-                      <p className="text-xs text-muted">{p.role}</p>
+                      <p className="text-sm font-medium text-ink">{p.nombre}</p>
+                      <p className="text-xs text-muted">{p.especialidad}</p>
                     </div>
                   </Link>
                 ))}
@@ -167,21 +184,10 @@ export default function ServiceDetail() {
             <Row label="Modalidad" value="Presencial · Estudio Nura" />
           </div>
 
-          {nextSlots.length > 0 && (
-            <div className="mt-5 border-t border-line-soft pt-5">
-              <Kicker>Próximas horas</Kicker>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {nextSlots.map((slot) => (
-                  <span
-                    key={`${slot.dateISO}-${slot.time}`}
-                    className="rounded-lg border border-line px-3 py-2 text-center text-sm text-ink"
-                  >
-                    {slot.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Aqui iba "Proximas horas". Se calculaba con la disponibilidad
+              semanal de los datos de ejemplo, y la tabla `profesionales` no
+              tiene columnas de horario: no hay con que calcularlo. Vuelve
+              cuando el esquema incorpore la agenda. */}
 
           <Button full className="mt-6" onClick={handleReservar}>
             Reservar este servicio

@@ -6,12 +6,13 @@ import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
 import type { Servicio } from '@/modules/servicios/domain/servicio.types'
 import { useServicioDetalle } from '@/modules/servicios/ui/useServicioDetalle'
 import { useServicios } from '@/modules/servicios/ui/useServicios'
+import { useProfesionales } from '@/modules/profesionales/ui/useProfesionales'
 import { getMonthDays, getSlotsForDate } from '@/shared/lib/availability'
 import { Stepper } from '@/shared/ui/Stepper'
 import { useScrollToTopOnChange } from '@/shared/components/ScrollToTop'
 import { Calendar } from '@/shared/components/Calendar'
 import { TimeSlotGrid } from '@/shared/components/TimeSlotGrid'
-import { AppImage, Avatar, Button, Kicker, Tag } from '@/shared/ui/ui'
+import { AppImage, Avatar, Button, Kicker } from '@/shared/ui/ui'
 import { formatLongDate, formatPrice, formatWeekdayLong, monthLabel } from '@/shared/lib/format'
 import type { Booking, Professional, ServiceCategoryId } from '@/shared/types'
 
@@ -82,8 +83,6 @@ export default function BookingFlow() {
     addBooking,
     bookings,
     getProfessional,
-    professionalsForService,
-    nextSlotsFor,
   } = useAppState()
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -166,6 +165,10 @@ export default function BookingFlow() {
   // puede pintar nada coherente debajo del Stepper.
   const esperandoServicio = step !== 'service' && servicioState.estado !== 'listo'
 
+  // El profesional elegido existe en la base pero no en los datos de ejemplo,
+  // que son los que aportan la disponibilidad semanal.
+  const sinAgenda = !esperandoServicio && step !== 'service' && step !== 'professional' && !professional
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
       <div className="mb-10 overflow-x-auto">
@@ -204,10 +207,21 @@ export default function BookingFlow() {
       {step === 'professional' && service && (
         <ProfessionalStep
           service={service}
-          options={professionalsForService(service.id)}
-          nextSlotLabels={(p) => nextSlotsFor(p, { count: 2 }).map((s) => s.label)}
           onBack={() => clearFrom('service')}
           onSelect={(professionalId) => setBookingDraft((d) => ({ ...d, professionalId }))}
+        />
+      )}
+
+      {/* Se eligio un profesional de la base, pero la agenda se calcula con la
+          disponibilidad semanal de los datos de ejemplo y la tabla
+          `profesionales` no tiene columnas de horario. Sin este aviso, los
+          pasos siguientes no renderizarian nada y la pantalla quedaria en
+          blanco bajo el Stepper. */}
+      {sinAgenda && (
+        <Aviso
+          titulo="Este profesional todavía no tiene agenda"
+          descripcion="Su horario aún no está en la base de datos, así que no podemos mostrar fechas ni horas disponibles."
+          accion={{ label: 'Elegir otro profesional', onClick: () => clearFrom('professional') }}
         />
       )}
 
@@ -355,65 +369,75 @@ function ServiceStep({
 
 function ProfessionalStep({
   service,
-  options,
-  nextSlotLabels,
   onBack,
   onSelect,
 }: {
   service: ServicioReservaVista
-  options: Professional[]
-  nextSlotLabels: (professional: Professional) => string[]
   onBack: () => void
   onSelect: (professionalId: string) => void
 }) {
+  const { profesionales, cargando, error } = useProfesionales()
+
   return (
     <div>
       <BackLink label="Cambiar servicio" onClick={onBack} />
       <h1 className="font-serif-display text-4xl text-ink">¿Con quién?</h1>
+      {/* No se puede decir "que realizan X": la tabla puente no cruza con
+          profesionales, asi que se listan todos los activos del estudio. */}
       <p className="mt-2 text-sm text-muted">
-        Profesionales que realizan <strong className="text-ink">{service.nombre}</strong>.
+        Profesionales del estudio disponibles para{' '}
+        <strong className="text-ink">{service.nombre}</strong>.
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        {options.map((p) => {
-          const labels = nextSlotLabels(p)
-          return (
-            <button
-              key={p.id}
-              onClick={() => onSelect(p.id)}
-              className="flex items-center gap-4 rounded-2xl border border-line-soft bg-paper p-5 text-left hover:shadow-md"
-            >
-              {p.imageUrl ? (
-                <AppImage src={p.imageUrl} alt={p.name} className="h-12 w-12 shrink-0 rounded-full" />
-              ) : (
-                <Avatar
-                  initials={p.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
-                />
-              )}
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-ink">{p.name}</p>
-                  {p.specialistBadge && <Tag>{p.specialistBadge}</Tag>}
-                </div>
-                <p className="text-sm text-muted">
-                  {p.role} · {p.experienceYears} años de experiencia
-                </p>
-                <p className="mt-1 text-xs text-muted-light">
-                  {labels.length > 0 ? `Próximas: ${labels.join(' · ')}` : 'Sin horas próximas'}
-                </p>
-              </div>
-            </button>
-          )
-        })}
-      </div>
-
-      {options.length === 0 && (
+      {cargando && (
         <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
-          Todavía no hay profesionales asignados a este servicio.
+          Cargando profesionales…
         </p>
+      )}
+
+      {error && (
+        <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+          No pudimos cargar los profesionales: {error}
+        </p>
+      )}
+
+      {!cargando && !error && (
+        <>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {profesionales.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => onSelect(p.id)}
+                className="flex items-center gap-4 rounded-2xl border border-line-soft bg-paper p-5 text-left hover:shadow-md"
+              >
+                {p.avatarUrl ? (
+                  <AppImage
+                    src={p.avatarUrl}
+                    alt={p.nombre}
+                    className="h-12 w-12 shrink-0 rounded-full"
+                  />
+                ) : (
+                  <Avatar
+                    initials={p.nombre
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')}
+                  />
+                )}
+                <div>
+                  <p className="font-medium text-ink">{p.nombre}</p>
+                  <p className="text-sm text-muted">{p.especialidad}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {profesionales.length === 0 && (
+            <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+              Todavía no hay profesionales cargados.
+            </p>
+          )}
+        </>
       )}
     </div>
   )
