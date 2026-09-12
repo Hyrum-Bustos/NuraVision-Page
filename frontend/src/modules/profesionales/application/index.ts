@@ -6,5 +6,8 @@ export {
   obtenerProfesionales,
   crearObtenerProfesionales,
 } from './obtener-profesionales.usecase'
+export { obtenerProfesionalesPorServicio } from './obtener-profesionales-por-servicio.usecase'
+export { obtenerDisponibilidad } from './obtener-disponibilidad.usecase'
 export type { Profesional } from '../domain/profesional.types'
+export type { Disponibilidad } from '../domain/disponibilidad.types'
 export type { ProfesionalRepository } from '../domain/profesional.repository'
