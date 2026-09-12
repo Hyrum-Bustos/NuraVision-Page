@@ -23,8 +23,8 @@ export interface Database {
           id: number
           /** text */
           nombre: string
-          /** text */
-          categoria: string
+          /** text, nullable: confirmado contra datos reales (hay filas con null) */
+          categoria: string | null
           /** text */
           descripcion: string | null
           /** integer */
@@ -37,7 +37,7 @@ export interface Database {
         Insert: {
           id?: number
           nombre: string
-          categoria: string
+          categoria?: string | null
           descripcion?: string | null
           duracion_minutos: number
           precio_base: number
@@ -46,7 +46,7 @@ export interface Database {
         Update: {
           id?: number
           nombre?: string
-          categoria?: string
+          categoria?: string | null
           descripcion?: string | null
           duracion_minutos?: number
           precio_base?: number
@@ -80,6 +80,54 @@ export interface Database {
           especialidad?: string
           avatar_url?: string | null
           activo?: boolean
+        }
+        Relationships: []
+      }
+      /** Tabla puente: que profesional realiza que servicio. */
+      profesional_servicios: {
+        Row: {
+          /** bigint, FK -> profesionales.id */
+          profesional_id: number
+          /** bigint, FK -> servicios.id */
+          servicio_id: number
+        }
+        Insert: {
+          profesional_id: number
+          servicio_id: number
+        }
+        Update: {
+          profesional_id?: number
+          servicio_id?: number
+        }
+        Relationships: []
+      }
+      /** Horario semanal de cada profesional. */
+      disponibilidad: {
+        Row: {
+          /** bigint */
+          id: number
+          /** bigint, FK -> profesionales.id */
+          profesional_id: number
+          /** integer. Ver DIA_SEMANA_BASE en disponibilidad.mapper.ts. */
+          dia_semana: number
+          /** time, llega como "HH:MM:SS" */
+          hora_inicio: string
+          /** time, llega como "HH:MM:SS" */
+          hora_fin: string
+        }
+        Insert: {
+          id?: number
+          profesional_id: number
+          dia_semana: number
+          hora_inicio: string
+          hora_fin: string
+        }
+        Update: {
+          id?: number
+          profesional_id?: number
+          dia_semana?: number
+          hora_inicio?: string
+          hora_fin?: string
         }
         Relationships: []
       }
