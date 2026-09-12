@@ -133,12 +133,25 @@ export default function ServiceDetail() {
             </div>
           )}
 
-          <Button full className="mt-6" onClick={handleReservar}>
-            Reservar este servicio
-          </Button>
-          <p className="mt-3 text-center text-xs text-muted">
-            Cancelación gratuita hasta 12 h antes
-          </p>
+          {/* Un servicio dado de baja sigue siendo accesible por enlace directo
+              (y desde el historial), pero ya no admite nuevas reservas. */}
+          {service.active ? (
+            <>
+              <Button full className="mt-6" onClick={handleReservar}>
+                Reservar este servicio
+              </Button>
+              <p className="mt-3 text-center text-xs text-muted">
+                Cancelación gratuita hasta 12 h antes
+              </p>
+            </>
+          ) : (
+            <div className="mt-6 rounded-xl border border-line bg-line-soft/60 px-5 py-4 text-center text-sm text-muted">
+              Este servicio no está disponible por ahora.{' '}
+              <Link to="/servicios" className="text-ink underline">
+                Ver el catálogo
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

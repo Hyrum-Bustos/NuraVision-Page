@@ -64,6 +64,8 @@ interface AppStateValue {
 
   // Catálogo
   services: Service[]
+  /** Solo los servicios ofrecidos hoy: es lo que debe ver el cliente. */
+  activeServices: Service[]
   getService: (id: string) => Service | undefined
   addService: (service: Omit<Service, 'id'>) => Service
   updateService: (id: string, patch: Partial<Omit<Service, 'id'>>) => void
@@ -228,6 +230,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       logout,
 
       services: data.services,
+      activeServices: data.services.filter((s) => s.active),
       getService,
       addService,
       updateService,

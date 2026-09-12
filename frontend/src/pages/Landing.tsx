@@ -29,7 +29,7 @@ const STEPS = [
 ]
 
 export default function Landing() {
-  const { services, professionals, siteContent, nextSlotsFor } = useAppState()
+  const { activeServices: services, professionals, siteContent, nextSlotsFor } = useAppState()
 
   const featured = services.slice(0, 4)
   const firstProfessional = professionals[0]

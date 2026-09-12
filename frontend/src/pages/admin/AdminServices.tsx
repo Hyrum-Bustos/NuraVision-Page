@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useAppState } from '../../state/AppState'
 import { useToast } from '../../state/Toast'
 import { categoryLabel, serviceCategories } from '../../data/seed'
@@ -26,6 +26,7 @@ const EMPTY_DRAFT: Draft = {
   durationMin: 60,
   price: 20000,
   includes: [],
+  active: true,
 }
 
 export default function AdminServices() {
@@ -43,6 +44,21 @@ export default function AdminServices() {
   function openEdit(service: Service) {
     const { id: _id, ...draft } = service
     setEditing({ id: service.id, draft })
+  }
+
+  /**
+   * Dar de baja no borra: el servicio desaparece del catálogo del cliente pero
+   * sigue existiendo para las reservas ya tomadas y para el historial.
+   */
+  function toggleActive(service: Service) {
+    updateService(service.id, { active: !service.active })
+    toast({
+      title: service.active ? 'Servicio desactivado' : 'Servicio activado',
+      description: service.active
+        ? `${service.name} ya no admite nuevas reservas.`
+        : `${service.name} vuelve a estar disponible.`,
+      tone: service.active ? 'info' : 'success',
+    })
   }
 
   function handleSave(draft: Draft, id?: string) {
@@ -80,6 +96,7 @@ export default function AdminServices() {
               <th className="px-6 py-4 font-medium">Duración</th>
               <th className="px-6 py-4 font-medium">Precio</th>
               <th className="px-6 py-4 font-medium">Profesionales</th>
+              <th className="px-6 py-4 font-medium">Estado</th>
               <th className="px-6 py-4" />
             </tr>
           </thead>
@@ -87,7 +104,10 @@ export default function AdminServices() {
             {services.map((s) => {
               const offeredBy = professionals.filter((p) => p.serviceIds.includes(s.id)).length
               return (
-                <tr key={s.id} className="transition-colors hover:bg-ivory/70">
+                <tr
+                  key={s.id}
+                  className={`transition-colors hover:bg-ivory/70 ${s.active ? '' : 'opacity-55'}`}
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <AppImage
@@ -107,6 +127,21 @@ export default function AdminServices() {
                   <td className="px-6 py-4 text-ink">{formatPrice(s.price)}</td>
                   <td className="px-6 py-4 text-muted">
                     {offeredBy > 0 ? offeredBy : <span className="text-danger">Sin asignar</span>}
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => toggleActive(s)}
+                      aria-pressed={s.active}
+                      aria-label={`${s.active ? 'Desactivar' : 'Activar'} ${s.name}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        s.active
+                          ? 'border-olive-300 bg-olive-50 text-olive-700 hover:bg-olive-100'
+                          : 'border-line bg-ivory text-muted hover:bg-line-soft'
+                      }`}
+                    >
+                      {s.active ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                      {s.active ? 'Activo' : 'Inactivo'}
+                    </button>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
@@ -133,7 +168,7 @@ export default function AdminServices() {
             })}
             {services.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-sm text-muted">
+                <td colSpan={7} className="px-6 py-10 text-center text-sm text-muted">
                   Todavía no hay servicios. Crea el primero con “Nuevo servicio”.
                 </td>
               </tr>

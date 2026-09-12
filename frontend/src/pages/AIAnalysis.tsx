@@ -10,7 +10,7 @@ type Step = 'prepare' | 'upload' | 'result'
 type SimulatedError = 'imagen_invalida' | 'servicio_caido' | null
 
 export default function AIAnalysis() {
-  const { siteContent, services } = useAppState()
+  const { siteContent, activeServices: services } = useAppState()
   const focusOptions = siteContent.aiFocusOptions
 
   const [focusId, setFocusId] = useState(focusOptions[0]?.id ?? '')

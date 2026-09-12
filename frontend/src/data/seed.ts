@@ -64,6 +64,7 @@ export const seedServices: Service[] = [
   {
     id: 'manicure-ritual-nura',
     category: 'unas',
+    active: true,
     name: 'Manicure Ritual Nura',
     shortDescription: 'Limado, cutículas, hidratación profunda y esmaltado a elección.',
     longDescription:
@@ -81,6 +82,7 @@ export const seedServices: Service[] = [
   {
     id: 'pedicure-spa',
     category: 'unas',
+    active: true,
     name: 'Pedicure Spa',
     shortDescription: 'Pedicure completo con exfoliación, masaje y esmaltado.',
     longDescription:
@@ -97,6 +99,7 @@ export const seedServices: Service[] = [
   {
     id: 'unas-esculpidas',
     category: 'unas',
+    active: true,
     name: 'Uñas esculpidas',
     shortDescription: 'Construcción en acrílico o gel con diseño personalizado.',
     longDescription:
@@ -113,6 +116,7 @@ export const seedServices: Service[] = [
   {
     id: 'tratamiento-capilar-reconstructivo',
     category: 'cabello',
+    active: true,
     name: 'Tratamiento capilar reconstructivo',
     shortDescription: 'Reconstrucción de fibra para cabello procesado o quebradizo.',
     longDescription:
@@ -129,6 +133,7 @@ export const seedServices: Service[] = [
   {
     id: 'corte-y-peinado',
     category: 'cabello',
+    active: true,
     name: 'Corte y peinado',
     shortDescription: 'Corte según tu tipo de cabello y peinado de salida.',
     longDescription:
@@ -140,6 +145,7 @@ export const seedServices: Service[] = [
   {
     id: 'coloracion',
     category: 'cabello',
+    active: true,
     name: 'Coloración',
     shortDescription: 'Color global, retoque de raíz o técnicas de iluminación.',
     longDescription:
@@ -156,6 +162,7 @@ export const seedServices: Service[] = [
   {
     id: 'limpieza-facial-profunda',
     category: 'piel',
+    active: true,
     name: 'Limpieza facial profunda',
     shortDescription: 'Higiene, extracción y mascarilla según tu tipo de piel.',
     longDescription:
@@ -172,6 +179,7 @@ export const seedServices: Service[] = [
   {
     id: 'diagnostico-capilar',
     category: 'diagnostico',
+    active: true,
     name: 'Diagnóstico capilar y de cuero cabelludo',
     shortDescription: 'Evaluación con lupa digital y plan de cuidado sugerido.',
     longDescription:
