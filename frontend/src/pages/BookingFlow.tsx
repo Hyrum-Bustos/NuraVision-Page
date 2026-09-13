@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
-import { useToast } from '../state/Toast'
 import { categoryLabel } from '../data/seed'
 import { getMonthDays, getSlotsForDate } from '../lib/availability'
 import { Stepper } from '../components/Stepper'
@@ -10,9 +9,15 @@ import { Calendar } from '../components/Calendar'
 import { TimeSlotGrid } from '../components/TimeSlotGrid'
 import { AppImage, Avatar, Button, Kicker, Tag } from '../components/ui'
 import { formatLongDate, formatPrice, formatWeekdayLong, monthLabel } from '../lib/format'
-import type { Booking, Professional, Service } from '../types'
+import { TextField } from '../components/form'
+import type { Booking, CurrentUser, Professional, Service } from '../types'
 
 type Step = 'service' | 'professional' | 'date' | 'time' | 'confirm'
+
+/** Datos de quien reserva: de la cuenta si hay sesión, del formulario si no. */
+type Contact = { name: string; email: string; phone: string }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function generateCode(dateISO: string): string {
   const [, m, d] = dateISO.split('-')
@@ -33,29 +38,12 @@ export default function BookingFlow() {
     professionalsForService,
     nextSlotsFor,
   } = useAppState()
-  const navigate = useNavigate()
-  const { toast } = useToast()
   const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null)
 
-  // El aviso se emite una sola vez: en desarrollo StrictMode monta el efecto
-  // dos veces y, sin esta guarda, el toast aparecía duplicado.
-  const notifiedRef = useRef(false)
-
-  useEffect(() => {
-    if (!currentUser || currentUser.role !== 'cliente') {
-      if (!notifiedRef.current) {
-        notifiedRef.current = true
-        // Sin el aviso, el rebote al login parece un error de la aplicación.
-        toast({
-          title: 'Inicia sesión para reservar',
-          description: 'Necesitamos identificarte para confirmar tu hora.',
-          tone: 'info',
-        })
-      }
-      navigate('/login')
-    }
-  }, [currentUser, navigate, toast])
+  // Reservar no exige cuenta. Si hay un cliente con sesión, sus datos se
+  // completan solos; si no, se piden en el paso de confirmación.
+  const account = currentUser?.role === 'cliente' ? currentUser : null
 
   const step: Step = !bookingDraft.serviceId
     ? 'service'
@@ -70,10 +58,8 @@ export default function BookingFlow() {
   // Cada paso del asistente vuelve al inicio de la pantalla.
   useScrollToTopOnChange(confirmedBooking ? 'success' : step)
 
-  if (!currentUser || currentUser.role !== 'cliente') return null
-
   if (confirmedBooking) {
-    return <SuccessScreen booking={confirmedBooking} />
+    return <SuccessScreen booking={confirmedBooking} registered={Boolean(account)} />
   }
 
   const service = bookingDraft.serviceId ? getService(bookingDraft.serviceId) : undefined
@@ -160,14 +146,18 @@ export default function BookingFlow() {
           professionalName={professional.name}
           dateISO={bookingDraft.dateISO}
           time={bookingDraft.time}
+          account={account}
           onBack={() => clearFrom('time')}
-          onConfirm={() => {
+          onConfirm={(contact) => {
             const booking: Booking = {
               id: `b-${Date.now()}`,
               code: generateCode(bookingDraft.dateISO!),
               serviceId: service.id,
               professionalId: professional.id,
-              clientName: currentUser.name,
+              clientName: contact.name,
+              clientEmail: contact.email,
+              clientPhone: contact.phone,
+              guest: !account,
               dateISO: bookingDraft.dateISO!,
               time: bookingDraft.time!,
               durationMin: service.durationMin,
@@ -446,6 +436,7 @@ function ConfirmStep({
   professionalName,
   dateISO,
   time,
+  account,
   onBack,
   onConfirm,
 }: {
@@ -453,9 +444,26 @@ function ConfirmStep({
   professionalName: string
   dateISO: string
   time: string
+  account: CurrentUser | null
   onBack: () => void
-  onConfirm: () => void
+  onConfirm: (contact: Contact) => void
 }) {
+  const [contact, setContact] = useState<Contact>(() =>
+    account
+      ? { name: account.name, email: account.email, phone: account.phone }
+      : { name: '', email: '', phone: '' },
+  )
+  const [showErrors, setShowErrors] = useState(false)
+
+  const errors = useMemo(() => {
+    const next: Partial<Record<keyof Contact, string>> = {}
+    if (!contact.name.trim()) next.name = 'Necesitamos tu nombre.'
+    if (!contact.email.trim()) next.email = 'Necesitamos un correo para enviarte el detalle.'
+    else if (!EMAIL_RE.test(contact.email.trim())) next.email = 'El formato del correo no es válido.'
+    if (!contact.phone.trim()) next.phone = 'Necesitamos un teléfono de contacto.'
+    return next
+  }, [contact])
+
   return (
     <div>
       <BackLink label="Cambiar hora" onClick={onBack} />
@@ -486,17 +494,78 @@ function ConfirmStep({
             <Row label="Duración" value={`${service.durationMin} min`} />
             <Row label="Lugar" value="Av. Libertad 1250, Viña del Mar" />
           </div>
+
+          {/* Sin cuenta, el correo y el teléfono son el único vínculo con la
+              reserva: no hay perfil donde consultarla después. */}
+          <div className="border-t border-line-soft p-6">
+            <Kicker>{account ? 'Tus datos' : 'Tus datos de contacto'}</Kicker>
+            {account ? (
+              <p className="mt-3 text-sm text-muted">
+                Reservas como <span className="text-ink">{account.name}</span> ({account.email}).
+              </p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <TextField
+                  label="Nombre y apellido"
+                  value={contact.name}
+                  onChange={(name) => setContact({ ...contact, name })}
+                  error={showErrors ? errors.name : undefined}
+                />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <TextField
+                    label="Correo electrónico"
+                    value={contact.email}
+                    onChange={(email) => setContact({ ...contact, email })}
+                    error={showErrors ? errors.email : undefined}
+                  />
+                  <TextField
+                    label="Teléfono"
+                    value={contact.phone}
+                    onChange={(phone) => setContact({ ...contact, phone })}
+                    error={showErrors ? errors.phone : undefined}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="h-fit rounded-2xl bg-line-soft/60 p-6">
           <p className="text-sm text-muted">Total a pagar en el salón</p>
           <p className="mt-1 font-serif-display text-4xl text-ink">{formatPrice(service.price)}</p>
-          <Button full className="mt-6" onClick={onConfirm}>
+          <Button
+            full
+            className="mt-6"
+            onClick={() => {
+              setShowErrors(true)
+              if (Object.keys(errors).length > 0) return
+              onConfirm({
+                name: contact.name.trim(),
+                email: contact.email.trim(),
+                phone: contact.phone.trim(),
+              })
+            }}
+          >
             Confirmar reserva
           </Button>
           <p className="mt-3 text-center text-xs text-muted">
             Puedes cancelar sin costo hasta 12 h antes de tu hora.
           </p>
+
+          {!account && (
+            <div className="mt-5 border-t border-line pt-5 text-xs text-muted">
+              <p>
+                Estás reservando sin cuenta. Tu hora queda igual de confirmada, pero no quedará
+                guardada en un perfil ni sumará beneficios de cliente registrado.
+              </p>
+              <Link
+                to="/registro"
+                className="mt-2 inline-block font-medium text-ink underline underline-offset-2"
+              >
+                Crear una cuenta
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -512,7 +581,7 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-function SuccessScreen({ booking }: { booking: Booking }) {
+function SuccessScreen({ booking, registered }: { booking: Booking; registered: boolean }) {
   const navigate = useNavigate()
   const { getService, getProfessional } = useAppState()
   const service = getService(booking.serviceId)
@@ -525,7 +594,9 @@ function SuccessScreen({ booking }: { booking: Booking }) {
       </div>
       <h1 className="mt-6 font-serif-display text-4xl text-ink">Tu reserva está confirmada</h1>
       <p className="mt-3 text-sm text-muted">
-        Te enviamos el detalle a tu correo y un recordatorio 24 h antes.
+        {registered
+          ? 'Te enviamos el detalle a tu correo y un recordatorio 24 h antes.'
+          : `Enviamos el detalle a ${booking.clientEmail}. Guarda tu código: es lo que necesitas para consultar o modificar tu hora.`}
       </p>
 
       <div className="mt-8 rounded-2xl border border-line-soft bg-paper p-6 text-left">
@@ -540,9 +611,24 @@ function SuccessScreen({ booking }: { booking: Booking }) {
         </div>
       </div>
 
+      {/* Sin cuenta no hay perfil donde volver a ver la reserva; el registro
+          es lo único que convierte esta hora en historial. */}
+      {!registered && (
+        <div className="mt-6 rounded-2xl border border-line-soft bg-line-soft/50 p-6 text-left">
+          <p className="font-medium text-ink">Crea tu cuenta y no vuelvas a escribir tus datos</p>
+          <p className="mt-2 text-sm text-muted">
+            Con una cuenta ves tu historial completo, reprogramas o cancelas con un clic y accedes
+            a los beneficios para clientes registrados.
+          </p>
+          <Button className="mt-4" onClick={() => navigate('/registro')}>
+            Crear mi cuenta
+          </Button>
+        </div>
+      )}
+
       <div className="mt-8 flex flex-wrap justify-center gap-4">
-        <Button onClick={() => navigate('/mis-reservas')}>Ver mis reservas</Button>
-        <Button variant="outline" onClick={() => navigate('/')}>
+        {registered && <Button onClick={() => navigate('/mis-reservas')}>Ver mis reservas</Button>}
+        <Button variant={registered ? 'outline' : 'solid'} onClick={() => navigate('/')}>
           Volver al inicio
         </Button>
       </div>
