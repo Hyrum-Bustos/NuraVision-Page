@@ -10,6 +10,7 @@ import { TimeSlotGrid } from '../components/TimeSlotGrid'
 import { AppImage, Avatar, Button, Kicker, Tag } from '../components/ui'
 import { formatLongDate, formatPrice, formatWeekdayLong, monthLabel } from '../lib/format'
 import { TextField } from '../components/form'
+import { pointsForPrice } from '../lib/loyalty'
 import type { Booking, CurrentUser, Professional, Service } from '../types'
 
 type Step = 'service' | 'professional' | 'date' | 'time' | 'confirm'
@@ -556,7 +557,11 @@ function ConfirmStep({
             <div className="mt-5 border-t border-line pt-5 text-xs text-muted">
               <p>
                 Estás reservando sin cuenta. Tu hora queda igual de confirmada, pero no quedará
-                guardada en un perfil ni sumará beneficios de cliente registrado.
+                guardada en un perfil ni sumará los{' '}
+                <span className="text-ink">
+                  {pointsForPrice(service.price)} puntos
+                </span>{' '}
+                que corresponden a este servicio.
               </p>
               <Link
                 to="/registro"
@@ -617,8 +622,9 @@ function SuccessScreen({ booking, registered }: { booking: Booking; registered: 
         <div className="mt-6 rounded-2xl border border-line-soft bg-line-soft/50 p-6 text-left">
           <p className="font-medium text-ink">Crea tu cuenta y no vuelvas a escribir tus datos</p>
           <p className="mt-2 text-sm text-muted">
-            Con una cuenta ves tu historial completo, reprogramas o cancelas con un clic y accedes
-            a los beneficios para clientes registrados.
+            Con una cuenta ves tu historial completo, reprogramas o cancelas con un clic y acumulas
+            puntos con cada atención — esta habría sumado{' '}
+            <span className="text-ink">{pointsForPrice(booking.price)}</span>.
           </p>
           <Button className="mt-4" onClick={() => navigate('/registro')}>
             Crear mi cuenta
