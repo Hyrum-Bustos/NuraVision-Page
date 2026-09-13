@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppState } from '../state/AppState'
 import { useToast } from '../state/Toast'
-import { Avatar, Button, Kicker } from '../components/ui'
+import { Avatar, Button, Card, Kicker } from '../components/ui'
+import { loyaltySummary } from '../lib/loyalty'
 
 export default function Profile() {
-  const { currentUser } = useAppState()
+  const { currentUser, bookings } = useAppState()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [firstName, setFirstName] = useState(currentUser?.firstName ?? '')
   const [lastName, setLastName] = useState(currentUser?.lastName ?? '')
   const [email, setEmail] = useState(currentUser?.email ?? '')
   const [phone, setPhone] = useState(currentUser?.phone ?? '')
+
+  const loyalty = useMemo(
+    () => loyaltySummary(bookings.filter((b) => b.clientName === currentUser?.name)),
+    [bookings, currentUser],
+  )
 
   useEffect(() => {
     if (!currentUser) navigate('/login')
@@ -32,6 +38,31 @@ export default function Profile() {
           )}
         </div>
       </div>
+
+      {currentUser.role === 'cliente' && (
+        <Card className="mt-8 p-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <Kicker>Cliente registrado</Kicker>
+              <p className="mt-2 font-serif-display text-4xl text-ink">
+                {loyalty.points.toLocaleString('es-CL')}{' '}
+                <span className="font-sans text-base font-normal text-muted">puntos</span>
+              </p>
+            </div>
+            <p className="text-sm text-muted">
+              {loyalty.completed === 0
+                ? 'Acumulas puntos con cada atención completada.'
+                : `De ${loyalty.completed} ${loyalty.completed === 1 ? 'atención' : 'atenciones'} completadas.`}
+            </p>
+          </div>
+          {loyalty.missed > 0 && (
+            <p className="mt-4 border-t border-line-soft pt-4 text-sm text-muted">
+              Dejaste de sumar <span className="text-ink">{loyalty.missed} puntos</span> en reservas
+              hechas sin iniciar sesión. Reserva con tu cuenta para que cuenten.
+            </p>
+          )}
+        </Card>
+      )}
 
       <form
         className="mt-8 space-y-5"
