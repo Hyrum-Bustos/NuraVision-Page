@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { useToast } from '../state/Toast'
-import { Avatar, Button, Card, Kicker } from '../components/ui'
-import { loyaltySummary } from '../lib/loyalty'
+import { useAppState } from '@/shared/state/AppState'
+import { useToast } from '@/shared/state/Toast'
+import { Avatar, Button, Card, Kicker } from '@/shared/ui/ui'
+import { loyaltySummary } from '@/shared/lib/loyalty'
 
 export default function Profile() {
   const { currentUser, bookings } = useAppState()

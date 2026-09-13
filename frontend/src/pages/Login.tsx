@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { AppImage, Button, Kicker } from '../components/ui'
-import type { Role } from '../types'
+import { useAppState } from '@/shared/state/AppState'
+import { AppImage, Button, Kicker } from '@/shared/ui/ui'
+import type { Role } from '@/shared/types'
 
 export default function Login() {
   const { login, siteContent } = useAppState()

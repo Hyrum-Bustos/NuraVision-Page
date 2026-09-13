@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { CalendarRange } from 'lucide-react'
-import { serviceCategories, TODAY_ISO } from '../../data/seed'
-import { useAppState } from '../../state/AppState'
-import { Card, FilterPills } from '../../components/ui'
-import { formatLongDate, formatPrice } from '../../lib/format'
+import { TODAY_ISO } from '@/shared/data/seed'
+import { serviceCategories } from '@/modules/servicios/domain/serviceCategories'
+import { useAppState } from '@/shared/state/AppState'
+import { Card, FilterPills } from '@/shared/ui/ui'
+import { formatLongDate, formatPrice } from '@/shared/lib/format'
 
 type PresetId = '30d' | '3m' | '6m' | 'anio' | 'personalizado'
 

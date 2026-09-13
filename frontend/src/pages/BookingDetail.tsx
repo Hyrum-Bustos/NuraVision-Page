@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { useToast } from '../state/Toast'
-import { ConfirmDialog } from '../components/Modal'
-import { getMonthDays, getSlotsForDate } from '../lib/availability'
-import { Calendar } from '../components/Calendar'
-import { TimeSlotGrid } from '../components/TimeSlotGrid'
-import { Button, StatusBadge } from '../components/ui'
-import { formatLongDate, formatPrice, monthLabel } from '../lib/format'
+import { useAppState } from '@/shared/state/AppState'
+import { useServicioDetalle } from '@/modules/servicios/ui/useServicioDetalle'
+import { useProfesionalesPorIds } from '@/modules/profesionales/ui/useProfesionalesPorIds'
+import { useDisponibilidad } from '@/modules/profesionales/ui/useDisponibilidad'
+import type { Professional } from '@/shared/types'
+import { useToast } from '@/shared/state/Toast'
+import { ConfirmDialog } from '@/shared/ui/Modal'
+import { getMonthDays, getSlotsForDate } from '@/shared/lib/availability'
+import { Calendar } from '@/shared/components/Calendar'
+import { TimeSlotGrid } from '@/shared/components/TimeSlotGrid'
+import { Button, StatusBadge } from '@/shared/ui/ui'
+import { formatLongDate, formatPrice, monthLabel } from '@/shared/lib/format'
 
 export default function BookingDetail() {
   const { id } = useParams()
@@ -22,6 +26,32 @@ export default function BookingDetail() {
 
   const booking = bookings.find((b) => b.id === id)
 
+  // Los hooks van antes de cualquier return: su cantidad y orden no puede
+  // cambiar entre renders.
+  const servicioState = useServicioDetalle(booking?.serviceId)
+  const profesionales = useProfesionalesPorIds(booking ? [booking.professionalId] : [])
+  const disponibilidad = useDisponibilidad(booking?.professionalId)
+
+  const profesionalDeLaBase = booking ? profesionales.porId.get(booking.professionalId) : undefined
+
+  /**
+   * El calculo de horas espera el `Professional` del prototipo. Se arma uno
+   * con los datos de la base y el horario ya convertido, para reutilizar esa
+   * logica en vez de duplicarla.
+   */
+  const professionalConAgenda: Professional | undefined = profesionalDeLaBase
+    ? {
+        id: profesionalDeLaBase.id,
+        name: profesionalDeLaBase.nombre,
+        role: profesionalDeLaBase.especialidad,
+        experienceYears: 0,
+        bio: '',
+        serviceIds: [],
+        imageUrl: profesionalDeLaBase.avatarUrl ?? undefined,
+        availability: disponibilidad.horario,
+      }
+    : undefined
+
   if (!booking) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-16 text-center">
@@ -33,8 +63,25 @@ export default function BookingDetail() {
     )
   }
 
-  const service = getService(booking.serviceId)
-  const professional = getProfessional(booking.professionalId)
+  /**
+   * La base manda; los datos de ejemplo quedan de puente. Las reservas
+   * anteriores a la migracion guardan ids del prototipo, que no existen en la
+   * base: sin este respaldo mostrarian un hueco. Es transitorio.
+   */
+  const nombreServicio =
+    (servicioState.estado === 'listo' ? servicioState.servicio.nombre : undefined) ??
+    getService(booking.serviceId)?.name ??
+    (servicioState.estado === 'cargando' ? 'Cargando…' : 'Servicio no disponible')
+
+  const nombreProfesional =
+    profesionalDeLaBase?.nombre ??
+    getProfessional(booking.professionalId)?.name ??
+    (profesionales.cargando ? 'Cargando…' : 'Profesional no disponible')
+
+  // Para reprogramar hace falta agenda: la del profesional de la base, o la
+  // del prototipo si esta reserva es anterior a la migracion.
+  const professional = professionalConAgenda ?? getProfessional(booking.professionalId)
+  const puedeReprogramar = Boolean(professional) && !disponibilidad.cargando
   const canManage = booking.status === 'confirmada' || booking.status === 'en_curso'
 
   return (
@@ -47,11 +94,11 @@ export default function BookingDetail() {
         <StatusBadge status={booking.status} />
         <span className="text-xs tracking-wide text-muted-light">{booking.code}</span>
       </div>
-      <h1 className="mt-2 font-serif-display text-4xl text-ink">{service?.name}</h1>
+      <h1 className="mt-2 font-serif-display text-4xl text-ink">{nombreServicio}</h1>
 
       <div className="mt-6 divide-y divide-line-soft rounded-2xl border border-line-soft bg-paper">
-        <Row label="Servicio" value={service?.name ?? '—'} />
-        <Row label="Profesional" value={professional?.name ?? '—'} />
+        <Row label="Servicio" value={nombreServicio} />
+        <Row label="Profesional" value={nombreProfesional} />
         <Row label="Fecha" value={formatLongDate(booking.dateISO)} />
         <Row label="Hora" value={`${booking.time} h`} />
         <Row label="Duración" value={`${booking.durationMin} min`} />
@@ -67,7 +114,7 @@ export default function BookingDetail() {
         </p>
       </div>
 
-      {canManage && professional && !rescheduling && (
+      {canManage && puedeReprogramar && professional &&!rescheduling && (
         <div className="mt-6 flex gap-4">
           <Button onClick={() => setRescheduling(true)}>Reprogramar</Button>
           <Button variant="danger-outline" onClick={() => setConfirmingCancel(true)}>
@@ -81,7 +128,7 @@ export default function BookingDetail() {
         onClose={() => setConfirmingCancel(false)}
         onConfirm={() => {
           updateBookingStatus(booking.id, 'cancelada')
-          toast({ title: 'Reserva cancelada', description: service?.name, tone: 'info' })
+          toast({ title: 'Reserva cancelada', description: nombreServicio, tone: 'info' })
         }}
         title="Cancelar reserva"
         confirmLabel="Cancelar reserva"
@@ -93,7 +140,7 @@ export default function BookingDetail() {
         }
       />
 
-      {canManage && professional && rescheduling && (
+      {canManage && puedeReprogramar && professional &&rescheduling && (
         <div className="mt-8 rounded-2xl border border-line-soft bg-paper p-6">
           <h2 className="font-serif-display text-2xl text-ink">Elige nueva fecha y hora</h2>
           <div className="mt-6 grid gap-8 lg:grid-cols-[1.3fr_1fr]">

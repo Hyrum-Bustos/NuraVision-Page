@@ -1,20 +1,20 @@
 import { useMemo, useState } from 'react'
 import { Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useAppState } from '../../state/AppState'
-import { useToast } from '../../state/Toast'
-import { categoryLabel, serviceCategories } from '../../data/seed'
-import { Modal, ConfirmDialog } from '../../components/Modal'
-import { ImageUploader } from '../../components/ImageUploader'
+import { useAppState } from '@/shared/state/AppState'
+import { useToast } from '@/shared/state/Toast'
+import { categoryLabel, serviceCategories } from '@/modules/servicios/domain/serviceCategories'
+import { Modal, ConfirmDialog } from '@/shared/ui/Modal'
+import { ImageUploader } from '@/shared/components/ImageUploader'
 import {
   NumberField,
   SelectField,
   StringListField,
   TextAreaField,
   TextField,
-} from '../../components/form'
-import { AppImage, Button } from '../../components/ui'
-import { formatPrice } from '../../lib/format'
-import type { Service, ServiceCategoryId } from '../../types'
+} from '@/shared/ui/form'
+import { AppImage, Button } from '@/shared/ui/ui'
+import { formatPrice } from '@/shared/lib/format'
+import type { Service, ServiceCategoryId } from '@/shared/types'
 
 type Draft = Omit<Service, 'id'>
 

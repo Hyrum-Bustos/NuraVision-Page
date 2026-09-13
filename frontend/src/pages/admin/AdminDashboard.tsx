@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { CalendarCheck, Clock, TrendingDown, Users } from 'lucide-react'
-import { useAppState } from '../../state/AppState'
-import { TODAY_ISO } from '../../data/seed'
-import { BookingsTable } from '../../components/BookingsTable'
-import { Card, StatCard } from '../../components/ui'
-import type { BookingStatus } from '../../types'
+import { useAppState } from '@/shared/state/AppState'
+import { TODAY_ISO } from '@/shared/data/seed'
+import { BookingsTable } from '@/shared/components/BookingsTable'
+import { Card, StatCard } from '@/shared/ui/ui'
+import type { BookingStatus } from '@/shared/types'
 
 const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 const MONTHS_LONG = [
