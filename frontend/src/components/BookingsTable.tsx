@@ -27,7 +27,17 @@ export function BookingsTable({ bookings }: { bookings: Booking[] }) {
             return (
               <tr key={b.id} className="transition-colors hover:bg-ivory/70">
                 <td className="px-6 py-4 text-muted-light">{b.code}</td>
-                <td className="px-6 py-4 font-medium text-ink">{b.clientName}</td>
+                <td className="px-6 py-4">
+                  <p className="font-medium text-ink">{b.clientName}</p>
+                  {/* Quien reserva sin cuenta solo deja su correo: el equipo
+                      necesita verlo para poder contactarlo. */}
+                  {b.guest && (
+                    <p className="mt-0.5 text-xs text-muted">
+                      <span className="rounded-full bg-line-soft px-2 py-0.5">Sin cuenta</span>{' '}
+                      {b.clientEmail}
+                    </p>
+                  )}
+                </td>
                 <td className="px-6 py-4 text-ink">{service?.name ?? '—'}</td>
                 <td className="px-6 py-4 text-ink">{professional?.name ?? '—'}</td>
                 <td className="px-6 py-4 text-ink">

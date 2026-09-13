@@ -61,6 +61,14 @@ export interface Booking {
   serviceId: string
   professionalId: string
   clientName: string
+  /** Contacto de quien reserva. En las reservas sin cuenta es el único vínculo. */
+  clientEmail?: string
+  clientPhone?: string
+  /**
+   * Reserva hecha sin iniciar sesión. Se atiende igual, pero no queda asociada
+   * a una cuenta y por tanto no acumula los beneficios de cliente registrado.
+   */
+  guest?: boolean
   dateISO: string
   time: string
   durationMin: number
