@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { useAppState } from '../../state/AppState'
-import { formatPrice } from '../../lib/format'
+import { useAppState } from '@/shared/state/AppState'
+import { formatPrice } from '@/shared/lib/format'
 
 export default function AdminClients() {
   const { bookings } = useAppState()

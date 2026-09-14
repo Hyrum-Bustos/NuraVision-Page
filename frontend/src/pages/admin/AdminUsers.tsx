@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Pencil, Plus, ShieldCheck, Trash2 } from 'lucide-react'
-import { useAppState } from '../../state/AppState'
-import { useToast } from '../../state/Toast'
-import { Modal, ConfirmDialog } from '../../components/Modal'
-import { Button, FilterPills } from '../../components/ui'
-import { SelectField, TextField } from '../../components/form'
-import { formatLongDate } from '../../lib/format'
-import type { AppUser, Role } from '../../types'
+import { useAppState } from '@/shared/state/AppState'
+import { useToast } from '@/shared/state/Toast'
+import { Modal, ConfirmDialog } from '@/shared/ui/Modal'
+import { Button, FilterPills } from '@/shared/ui/ui'
+import { SelectField, TextField } from '@/shared/ui/form'
+import { formatLongDate } from '@/shared/lib/format'
+import type { AppUser, Role } from '@/shared/types'
 
 type Draft = Omit<AppUser, 'id' | 'createdAt'>
 

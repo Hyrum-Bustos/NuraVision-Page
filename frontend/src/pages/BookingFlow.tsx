@@ -1,17 +1,23 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAppState } from '../state/AppState'
-import { categoryLabel } from '../data/seed'
-import { getMonthDays, getSlotsForDate } from '../lib/availability'
-import { Stepper } from '../components/Stepper'
-import { useScrollToTopOnChange } from '../components/ScrollToTop'
-import { Calendar } from '../components/Calendar'
-import { TimeSlotGrid } from '../components/TimeSlotGrid'
-import { AppImage, Avatar, Button, Kicker, Tag } from '../components/ui'
-import { formatLongDate, formatPrice, formatWeekdayLong, monthLabel } from '../lib/format'
-import { TextField } from '../components/form'
-import { pointsForPrice } from '../lib/loyalty'
-import type { Booking, CurrentUser, Professional, Service } from '../types'
+import { useAppState } from '@/shared/state/AppState'
+import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
+import type { Servicio } from '@/modules/servicios/domain/servicio.types'
+import { useServicioDetalle } from '@/modules/servicios/ui/useServicioDetalle'
+import { useServicios } from '@/modules/servicios/ui/useServicios'
+import { useProfesionalesPorServicio } from '@/modules/profesionales/ui/useProfesionalesPorServicio'
+import { useDisponibilidad } from '@/modules/profesionales/ui/useDisponibilidad'
+import { getMonthDays, getSlotsForDate } from '@/shared/lib/availability'
+import { Stepper } from '@/shared/ui/Stepper'
+import { useScrollToTopOnChange } from '@/shared/components/ScrollToTop'
+import { Calendar } from '@/shared/components/Calendar'
+import { TimeSlotGrid } from '@/shared/components/TimeSlotGrid'
+import { AppImage, Avatar, Button, Kicker } from '@/shared/ui/ui'
+import { formatLongDate, formatPrice, formatWeekdayLong, monthLabel } from '@/shared/lib/format'
+import { TextField } from '@/shared/ui/form'
+import { pointsForPrice } from '@/shared/lib/loyalty'
+import type { Booking, CurrentUser, Professional, ServiceCategoryId } from '@/shared/types'
+import type { Profesional } from '@/modules/profesionales/domain/profesional.types'
 
 type Step = 'service' | 'professional' | 'date' | 'time' | 'confirm'
 
@@ -20,31 +26,99 @@ type Contact = { name: string; email: string; phone: string }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/**
+ * Lo que el asistente necesita del servicio. Se construye desde la entidad de
+ * dominio con valores por defecto para lo que la tabla aun no tiene, de modo
+ * que una columna faltante nunca deje el resumen del borrador a medias.
+ */
+interface ServicioReservaVista {
+  id: string
+  nombre: string
+  categoria: ServiceCategoryId
+  duracionMinutos: number
+  precioBase: number
+  /** Sin columna de imagen en la base: AppImage cae en su placeholder. */
+  imagenUrl: string | undefined
+}
+
+function toVista(servicio: Servicio): ServicioReservaVista {
+  return {
+    id: servicio.id,
+    nombre: servicio.nombre,
+    categoria: servicio.categoria,
+    duracionMinutos: servicio.duracionMinutos,
+    precioBase: servicio.precioBase,
+    imagenUrl: undefined,
+  }
+}
+
 function generateCode(dateISO: string): string {
   const [, m, d] = dateISO.split('-')
   const random = Math.floor(1000 + Math.random() * 9000)
   return `NV-${d}${m}-${random}`
 }
 
-export default function BookingFlow() {
-  const {
-    currentUser,
-    bookingDraft,
-    setBookingDraft,
-    addBooking,
-    activeServices: services,
-    bookings,
-    getService,
-    getProfessional,
-    professionalsForService,
-    nextSlotsFor,
-  } = useAppState()
-  const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
-  const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null)
+function Aviso({
+  titulo,
+  descripcion,
+  accion,
+}: {
+  titulo: string
+  descripcion: string
+  accion?: { label: string; onClick: () => void }
+}) {
+  return (
+    <div className="rounded-2xl border border-dashed border-line p-10 text-center">
+      <p className="font-medium text-ink">{titulo}</p>
+      <p className="mt-2 text-sm text-muted">{descripcion}</p>
+      {accion && (
+        <button
+          onClick={accion.onClick}
+          className="mt-5 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink hover:bg-ivory"
+        >
+          {accion.label}
+        </button>
+      )}
+    </div>
+  )
+}
 
+export default function BookingFlow() {
+  const { currentUser, bookingDraft, setBookingDraft, addBooking, bookings } = useAppState()
   // Reservar no exige cuenta. Si hay un cliente con sesión, sus datos se
   // completan solos; si no, se piden en el paso de confirmación.
   const account = currentUser?.role === 'cliente' ? currentUser : null
+  const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
+  const [confirmado, setConfirmado] = useState<{ booking: Booking; servicioNombre: string } | null>(
+    null,
+  )
+
+  // Servicio, profesionales y horario salen de la base, no de los seeds.
+  const servicioState = useServicioDetalle(bookingDraft.serviceId)
+  const profesionalesState = useProfesionalesPorServicio(bookingDraft.serviceId)
+  const disponibilidad = useDisponibilidad(bookingDraft.professionalId)
+
+  /**
+   * El calculo de horas (getMonthDays, getSlotsForDate) espera el `Professional`
+   * del prototipo. En vez de duplicar esa logica, se arma uno con los datos de
+   * la base y el horario ya convertido: asi la agenda sigue siendo el mismo
+   * codigo, probado, y solo cambia de donde salen los datos.
+   */
+  const professional: Professional | undefined = useMemo(() => {
+    const elegido = profesionalesState.profesionales.find((p) => p.id === bookingDraft.professionalId)
+    if (!elegido) return undefined
+    return {
+      id: elegido.id,
+      name: elegido.nombre,
+      role: elegido.especialidad,
+      experienceYears: 0,
+      bio: '',
+      serviceIds: [],
+      imageUrl: elegido.avatarUrl ?? undefined,
+      availability: disponibilidad.horario,
+    }
+  }, [profesionalesState.profesionales, bookingDraft.professionalId, disponibilidad.horario])
+
 
   const step: Step = !bookingDraft.serviceId
     ? 'service'
@@ -57,16 +131,19 @@ export default function BookingFlow() {
           : 'confirm'
 
   // Cada paso del asistente vuelve al inicio de la pantalla.
-  useScrollToTopOnChange(confirmedBooking ? 'success' : step)
+  useScrollToTopOnChange(confirmado ? 'success' : step)
 
-  if (confirmedBooking) {
-    return <SuccessScreen booking={confirmedBooking} registered={Boolean(account)} />
+  if (confirmado) {
+    return (
+      <SuccessScreen
+        booking={confirmado.booking}
+        servicioNombre={confirmado.servicioNombre}
+        registered={!confirmado.booking.guest}
+      />
+    )
   }
 
-  const service = bookingDraft.serviceId ? getService(bookingDraft.serviceId) : undefined
-  const professional = bookingDraft.professionalId
-    ? getProfessional(bookingDraft.professionalId)
-    : undefined
+  const service = servicioState.estado === 'listo' ? toVista(servicioState.servicio) : undefined
 
   const stepIndex = { service: 0, professional: 1, date: 2, time: 3, confirm: 4 }[step]
 
@@ -92,6 +169,18 @@ export default function BookingFlow() {
     })
   }
 
+  // Pasados el primer paso, todo depende del servicio: si aún no llega, no se
+  // puede pintar nada coherente debajo del Stepper.
+  const esperandoServicio = step !== 'service' && servicioState.estado !== 'listo'
+
+  // De la fecha en adelante todo depende del horario del profesional: si aún
+  // no llega, falta o falló, no hay fechas que ofrecer.
+  const pasosConAgenda = step === 'date' || step === 'time' || step === 'confirm'
+  const esperandoHorario =
+    !esperandoServicio &&
+    pasosConAgenda &&
+    (disponibilidad.cargando || disponibilidad.error !== null || disponibilidad.sinHorario)
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
       <div className="mb-10 overflow-x-auto">
@@ -100,9 +189,28 @@ export default function BookingFlow() {
         </div>
       </div>
 
+      {esperandoServicio && servicioState.estado === 'cargando' && (
+        <Aviso titulo="Cargando el servicio…" descripcion="Estamos leyendo los datos de tu reserva." />
+      )}
+
+      {esperandoServicio && servicioState.estado === 'error' && (
+        <Aviso
+          titulo="No pudimos cargar el servicio"
+          descripcion={servicioState.mensaje}
+          accion={{ label: 'Elegir otro servicio', onClick: () => clearFrom('service') }}
+        />
+      )}
+
+      {esperandoServicio && servicioState.estado === 'no-encontrado' && (
+        <Aviso
+          titulo="Ese servicio ya no está disponible"
+          descripcion="Puede que haya cambiado de nombre o se haya dado de baja del catálogo."
+          accion={{ label: 'Elegir otro servicio', onClick: () => clearFrom('service') }}
+        />
+      )}
+
       {step === 'service' && (
         <ServiceStep
-          services={services}
           preselectedProfessional={professional}
           onSelect={(serviceId) => setBookingDraft((d) => ({ ...d, serviceId }))}
         />
@@ -111,14 +219,38 @@ export default function BookingFlow() {
       {step === 'professional' && service && (
         <ProfessionalStep
           service={service}
-          options={professionalsForService(service.id)}
-          nextSlotLabels={(p) => nextSlotsFor(p, { count: 2 }).map((s) => s.label)}
+          profesionales={profesionalesState.profesionales}
+          cargando={profesionalesState.cargando}
+          error={profesionalesState.error}
           onBack={() => clearFrom('service')}
           onSelect={(professionalId) => setBookingDraft((d) => ({ ...d, professionalId }))}
         />
       )}
 
-      {step === 'date' && service && professional && (
+      {esperandoHorario && disponibilidad.cargando && (
+        <Aviso titulo="Cargando la agenda…" descripcion="Estamos leyendo el horario del profesional." />
+      )}
+
+      {esperandoHorario && disponibilidad.error && (
+        <Aviso
+          titulo="No pudimos cargar la agenda"
+          descripcion={disponibilidad.error}
+          accion={{ label: 'Elegir otro profesional', onClick: () => clearFrom('professional') }}
+        />
+      )}
+
+      {/* El profesional existe pero no tiene ni un bloque en `disponibilidad`:
+          sin horario no hay fechas que ofrecer. Sin este aviso los pasos
+          siguientes no renderizarian nada y la pantalla quedaria en blanco. */}
+      {esperandoHorario && disponibilidad.sinHorario && (
+        <Aviso
+          titulo="Este profesional todavía no tiene agenda"
+          descripcion="Aún no tiene horarios cargados, así que no podemos mostrar fechas ni horas disponibles."
+          accion={{ label: 'Elegir otro profesional', onClick: () => clearFrom('professional') }}
+        />
+      )}
+
+      {step === 'date' && !esperandoHorario && service && professional && (
         <DateStep
           service={service}
           professional={professional}
@@ -130,7 +262,7 @@ export default function BookingFlow() {
         />
       )}
 
-      {step === 'time' && service && professional && bookingDraft.dateISO && (
+      {step === 'time' && !esperandoHorario && service && professional && bookingDraft.dateISO && (
         <TimeStep
           dateISO={bookingDraft.dateISO}
           professional={professional}
@@ -141,7 +273,7 @@ export default function BookingFlow() {
         />
       )}
 
-      {step === 'confirm' && service && professional && bookingDraft.dateISO && bookingDraft.time && (
+      {step === 'confirm' && !esperandoHorario && service && professional && bookingDraft.dateISO && bookingDraft.time && (
         <ConfirmStep
           service={service}
           professionalName={professional.name}
@@ -161,13 +293,15 @@ export default function BookingFlow() {
               guest: !account,
               dateISO: bookingDraft.dateISO!,
               time: bookingDraft.time!,
-              durationMin: service.durationMin,
-              price: service.price,
+              durationMin: service.duracionMinutos,
+              price: service.precioBase,
               status: 'confirmada',
             }
             addBooking(booking)
             setBookingDraft(() => ({}))
-            setConfirmedBooking(booking)
+            // Se guarda el nombre junto a la reserva: la pantalla de éxito ya no
+            // puede resolverlo desde los datos de ejemplo.
+            setConfirmado({ booking, servicioNombre: service.nombre })
           }}
         />
       )}
@@ -184,17 +318,20 @@ function BackLink({ label, onClick }: { label: string; onClick: () => void }) {
 }
 
 function ServiceStep({
-  services,
   preselectedProfessional,
   onSelect,
 }: {
-  services: Service[]
   preselectedProfessional?: Professional
   onSelect: (serviceId: string) => void
 }) {
+  const { servicios, cargando, error } = useServicios()
+
+  // Los profesionales siguen viniendo de los datos de ejemplo y referencian
+  // servicios por los ids del prototipo, que no coinciden con los de la base.
+  // Hasta que se migren, este filtro no cruza y la lista llega vacía.
   const list = preselectedProfessional
-    ? services.filter((s) => preselectedProfessional.serviceIds.includes(s.id))
-    : services
+    ? servicios.filter((s) => preselectedProfessional.serviceIds.includes(s.id))
+    : servicios
 
   return (
     <div>
@@ -209,35 +346,51 @@ function ServiceStep({
         )}
       </p>
 
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => onSelect(s.id)}
-            className="flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-paper text-left transition-shadow hover:shadow-md"
-          >
-            <AppImage
-              src={s.imageUrl}
-              label={s.name.split(' ')[0].toUpperCase()}
-              alt={s.name}
-              className="aspect-[4/3] w-full"
-            />
-            <div className="p-5">
-              <Kicker>{categoryLabel(s.category)}</Kicker>
-              <h3 className="mt-1 font-serif-display text-lg text-ink">{s.name}</h3>
-              <div className="mt-3 flex items-center justify-between text-sm text-ink">
-                <span>{s.durationMin} min</span>
-                <span className="font-medium">{formatPrice(s.price)}</span>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {list.length === 0 && (
+      {cargando && (
         <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
-          No hay servicios disponibles por ahora.
+          Cargando el catálogo…
         </p>
+      )}
+
+      {error && (
+        <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+          No pudimos cargar el catálogo: {error}
+        </p>
+      )}
+
+      {!cargando && !error && (
+        <>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {list.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onSelect(s.id)}
+                className="flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-paper text-left transition-shadow hover:shadow-md"
+              >
+                <AppImage
+                  src={undefined}
+                  label={s.nombre.split(' ')[0].toUpperCase()}
+                  alt={s.nombre}
+                  className="aspect-[4/3] w-full"
+                />
+                <div className="p-5">
+                  <Kicker>{categoryLabel(s.categoria)}</Kicker>
+                  <h3 className="mt-1 font-serif-display text-lg text-ink">{s.nombre}</h3>
+                  <div className="mt-3 flex items-center justify-between text-sm text-ink">
+                    <span>{s.duracionMinutos} min</span>
+                    <span className="font-medium">{formatPrice(s.precioBase)}</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {list.length === 0 && (
+            <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+              No hay servicios disponibles por ahora.
+            </p>
+          )}
+        </>
       )}
     </div>
   )
@@ -245,14 +398,16 @@ function ServiceStep({
 
 function ProfessionalStep({
   service,
-  options,
-  nextSlotLabels,
+  profesionales,
+  cargando,
+  error,
   onBack,
   onSelect,
 }: {
-  service: Service
-  options: Professional[]
-  nextSlotLabels: (professional: Professional) => string[]
+  service: ServicioReservaVista
+  profesionales: Profesional[]
+  cargando: boolean
+  error: string | null
   onBack: () => void
   onSelect: (professionalId: string) => void
 }) {
@@ -261,49 +416,58 @@ function ProfessionalStep({
       <BackLink label="Cambiar servicio" onClick={onBack} />
       <h1 className="font-serif-display text-4xl text-ink">¿Con quién?</h1>
       <p className="mt-2 text-sm text-muted">
-        Profesionales que realizan <strong className="text-ink">{service.name}</strong>.
+        Profesionales que realizan <strong className="text-ink">{service.nombre}</strong>.
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        {options.map((p) => {
-          const labels = nextSlotLabels(p)
-          return (
-            <button
-              key={p.id}
-              onClick={() => onSelect(p.id)}
-              className="flex items-center gap-4 rounded-2xl border border-line-soft bg-paper p-5 text-left hover:shadow-md"
-            >
-              {p.imageUrl ? (
-                <AppImage src={p.imageUrl} alt={p.name} className="h-12 w-12 shrink-0 rounded-full" />
-              ) : (
-                <Avatar
-                  initials={p.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
-                />
-              )}
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-ink">{p.name}</p>
-                  {p.specialistBadge && <Tag>{p.specialistBadge}</Tag>}
-                </div>
-                <p className="text-sm text-muted">
-                  {p.role} · {p.experienceYears} años de experiencia
-                </p>
-                <p className="mt-1 text-xs text-muted-light">
-                  {labels.length > 0 ? `Próximas: ${labels.join(' · ')}` : 'Sin horas próximas'}
-                </p>
-              </div>
-            </button>
-          )
-        })}
-      </div>
-
-      {options.length === 0 && (
+      {cargando && (
         <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
-          Todavía no hay profesionales asignados a este servicio.
+          Cargando profesionales…
         </p>
+      )}
+
+      {error && (
+        <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+          No pudimos cargar los profesionales: {error}
+        </p>
+      )}
+
+      {!cargando && !error && (
+        <>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {profesionales.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => onSelect(p.id)}
+                className="flex items-center gap-4 rounded-2xl border border-line-soft bg-paper p-5 text-left hover:shadow-md"
+              >
+                {p.avatarUrl ? (
+                  <AppImage
+                    src={p.avatarUrl}
+                    alt={p.nombre}
+                    className="h-12 w-12 shrink-0 rounded-full"
+                  />
+                ) : (
+                  <Avatar
+                    initials={p.nombre
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')}
+                  />
+                )}
+                <div>
+                  <p className="font-medium text-ink">{p.nombre}</p>
+                  <p className="text-sm text-muted">{p.especialidad}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {profesionales.length === 0 && (
+            <p className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+              Este servicio aún no tiene profesionales asignados.
+            </p>
+          )}
+        </>
       )}
     </div>
   )
@@ -318,7 +482,7 @@ function DateStep({
   onBack,
   onSelect,
 }: {
-  service: Service
+  service: ServicioReservaVista
   professional: Professional
   days: ReturnType<typeof getMonthDays>
   calendarView: { year: number; month: number }
@@ -331,7 +495,7 @@ function DateStep({
       <BackLink label="Cambiar profesional" onClick={onBack} />
       <h1 className="font-serif-display text-4xl text-ink">Elige una fecha</h1>
       <p className="mt-2 text-sm text-muted">
-        {service.name} con {professional.name} · {service.durationMin} min
+        {service.nombre} con {professional.name} · {service.duracionMinutos} min
       </p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
@@ -360,7 +524,7 @@ function DateStep({
           <dl className="mt-4 space-y-4 text-sm">
             <div>
               <dt className="text-muted">Servicio</dt>
-              <dd className="mt-0.5 font-medium text-ink">{service.name}</dd>
+              <dd className="mt-0.5 font-medium text-ink">{service.nombre}</dd>
             </div>
             <div>
               <dt className="text-muted">Profesional</dt>
@@ -368,12 +532,14 @@ function DateStep({
             </div>
             <div>
               <dt className="text-muted">Duración</dt>
-              <dd className="mt-0.5 font-medium text-ink">{service.durationMin} min</dd>
+              <dd className="mt-0.5 font-medium text-ink">{service.duracionMinutos} min</dd>
             </div>
           </dl>
           <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
             <span className="text-sm text-muted">Total</span>
-            <span className="font-serif-display text-2xl text-ink">{formatPrice(service.price)}</span>
+            <span className="font-serif-display text-2xl text-ink">
+              {formatPrice(service.precioBase)}
+            </span>
           </div>
         </div>
       </div>
@@ -441,7 +607,7 @@ function ConfirmStep({
   onBack,
   onConfirm,
 }: {
-  service: Service
+  service: ServicioReservaVista
   professionalName: string
   dateISO: string
   time: string
@@ -477,22 +643,22 @@ function ConfirmStep({
         <div className="rounded-2xl border border-line-soft bg-paper">
           <div className="flex items-center gap-4 p-6">
             <AppImage
-              src={service.imageUrl}
-              label={service.name.split(' ')[0].toUpperCase()}
-              alt={service.name}
+              src={service.imagenUrl}
+              label={service.nombre.split(' ')[0].toUpperCase()}
+              alt={service.nombre}
               className="h-16 w-16 shrink-0 rounded-xl"
             />
             <div>
-              <p className="font-serif-display text-xl text-ink">{service.name}</p>
-              <p className="text-sm text-muted">{categoryLabel(service.category)}</p>
+              <p className="font-serif-display text-xl text-ink">{service.nombre}</p>
+              <p className="text-sm text-muted">{categoryLabel(service.categoria)}</p>
             </div>
           </div>
           <div className="space-y-4 border-t border-line-soft p-6 text-sm">
-            <Row label="Servicio" value={service.name} />
+            <Row label="Servicio" value={service.nombre} />
             <Row label="Profesional" value={professionalName} />
             <Row label="Fecha" value={formatLongDate(dateISO)} />
             <Row label="Hora" value={`${time} h`} />
-            <Row label="Duración" value={`${service.durationMin} min`} />
+            <Row label="Duración" value={`${service.duracionMinutos} min`} />
             <Row label="Lugar" value="Av. Libertad 1250, Viña del Mar" />
           </div>
 
@@ -533,7 +699,9 @@ function ConfirmStep({
 
         <div className="h-fit rounded-2xl bg-line-soft/60 p-6">
           <p className="text-sm text-muted">Total a pagar en el salón</p>
-          <p className="mt-1 font-serif-display text-4xl text-ink">{formatPrice(service.price)}</p>
+          <p className="mt-1 font-serif-display text-4xl text-ink">
+            {formatPrice(service.precioBase)}
+          </p>
           <Button
             full
             className="mt-6"
@@ -559,7 +727,7 @@ function ConfirmStep({
                 Estás reservando sin cuenta. Tu hora queda igual de confirmada, pero no quedará
                 guardada en un perfil ni sumará los{' '}
                 <span className="text-ink">
-                  {pointsForPrice(service.price)} puntos
+                  {pointsForPrice(service.precioBase)} puntos
                 </span>{' '}
                 que corresponden a este servicio.
               </p>
@@ -586,10 +754,17 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-function SuccessScreen({ booking, registered }: { booking: Booking; registered: boolean }) {
+function SuccessScreen({
+  booking,
+  servicioNombre,
+  registered,
+}: {
+  booking: Booking
+  servicioNombre: string
+  registered: boolean
+}) {
   const navigate = useNavigate()
-  const { getService, getProfessional } = useAppState()
-  const service = getService(booking.serviceId)
+  const { getProfessional } = useAppState()
   const professional = getProfessional(booking.professionalId)
 
   return (
@@ -607,7 +782,7 @@ function SuccessScreen({ booking, registered }: { booking: Booking; registered: 
       <div className="mt-8 rounded-2xl border border-line-soft bg-paper p-6 text-left">
         <p className="text-xs font-medium tracking-wide text-muted-light">{booking.code}</p>
         <div className="mt-4 space-y-3 divide-y divide-line-soft text-sm [&>div]:pt-3 [&>div:first-child]:pt-0">
-          <Row label="Servicio" value={service?.name ?? '—'} />
+          <Row label="Servicio" value={servicioNombre} />
           <Row label="Profesional" value={professional?.name ?? '—'} />
           <Row label="Fecha" value={formatLongDate(booking.dateISO)} />
           <Row label="Hora" value={`${booking.time} h`} />

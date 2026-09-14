@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertTriangle, Upload } from 'lucide-react'
-import { useAppState } from '../state/AppState'
-import { AppImage, Button, FilterPills, Kicker } from '../components/ui'
-import { useScrollToTopOnChange } from '../components/ScrollToTop'
-import { formatPrice } from '../lib/format'
+import { useAppState } from '@/shared/state/AppState'
+import { AppImage, Button, FilterPills, Kicker } from '@/shared/ui/ui'
+import { useScrollToTopOnChange } from '@/shared/components/ScrollToTop'
+import { formatPrice } from '@/shared/lib/format'
 
 type Step = 'prepare' | 'upload' | 'result'
 type SimulatedError = 'imagen_invalida' | 'servicio_caido' | null
