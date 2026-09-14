@@ -5,7 +5,7 @@ import { AppImage, Button, Kicker } from '@/shared/ui/ui'
 import type { Role } from '@/shared/types'
 
 export default function Login() {
-  const { login, siteContent } = useAppState()
+  const { login, siteContent, realDataOnly, setRealDataOnly } = useAppState()
   const navigate = useNavigate()
   const [email, setEmail] = useState('camila.torres@correo.cl')
   const [password, setPassword] = useState('••••••••••')
@@ -108,6 +108,42 @@ export default function Login() {
             >
               Estado de error
             </button>
+          </div>
+
+          {/* La migración a Supabase está a medias: reservas, usuarios y
+              contenido del sitio siguen siendo datos de muestra. Este
+              interruptor los oculta para poder ver el avance real. */}
+          <div className="mt-6 rounded-xl border border-line-soft bg-white/60 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-ink">Solo datos de Supabase</p>
+                <p className="mt-1 text-xs text-muted">
+                  Oculta toda la información de muestra. Queda únicamente lo que existe en la base
+                  de datos.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={realDataOnly}
+                aria-label="Mostrar solo datos de Supabase"
+                onClick={() => setRealDataOnly(!realDataOnly)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                  realDataOnly ? 'bg-olive-600' : 'bg-line'
+                }`}
+              >
+                <span
+                  className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                    realDataOnly ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            {realDataOnly && (
+              <p className="mt-3 border-t border-line-soft pt-3 text-xs text-olive-700">
+                Activo. Las secciones que todavía no están migradas se verán vacías.
+              </p>
+            )}
           </div>
         </div>
       </div>
