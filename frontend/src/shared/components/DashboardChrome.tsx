@@ -49,8 +49,14 @@ export function DashboardShell({
       >
         <div className="mb-10 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 font-serif-display text-sm text-white">
-              N
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25">
+              <img
+                src="/nuravision-isotipo.png"
+                alt=""
+                className="h-5 w-5 object-contain"
+                width={512}
+                height={512}
+              />
             </div>
             <div>
               <p className="font-serif-display text-lg text-white">NuraVision</p>

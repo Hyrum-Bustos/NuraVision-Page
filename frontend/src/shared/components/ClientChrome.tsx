@@ -6,13 +6,14 @@ import { Avatar, LinkButton } from '@/shared/ui/ui'
 
 function Brand() {
   return (
-    <NavLink to="/" className="flex shrink-0 items-baseline gap-2">
-      <span className="whitespace-nowrap font-serif-display text-xl text-ink sm:text-2xl">
-        Estudio Nura
-      </span>
-      <span className="hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-muted sm:inline">
-        Nuravision
-      </span>
+    <NavLink to="/" className="flex shrink-0 items-center">
+      <img
+        src="/nuravision-logo.png"
+        alt="Nuravision"
+        className="h-7 w-auto sm:h-8"
+        width={800}
+        height={267}
+      />
     </NavLink>
   )
 }
