@@ -156,12 +156,12 @@ export interface Database {
           /** time, "HH:MM:SS" */
           hora_inicio: string
           /** time, "HH:MM:SS" */
-          hora_fin: string | null
-          cliente_nombre: string | null
-          cliente_email: string | null
+          hora_fin: string
+          cliente_nombre: string
+          cliente_email: string
           cliente_telefono: string | null
-          /** Codigo visible para quien reserva sin cuenta. */
-          codigo: string | null
+          /** Codigo visible para quien reserva sin cuenta. Unico. */
+          codigo: string
           estado: EstadoReserva
         }
         Insert: {
@@ -171,11 +171,11 @@ export interface Database {
           cliente_id?: string | null
           fecha: string
           hora_inicio: string
-          hora_fin?: string | null
-          cliente_nombre?: string | null
-          cliente_email?: string | null
+          hora_fin: string
+          cliente_nombre: string
+          cliente_email: string
           cliente_telefono?: string | null
-          codigo?: string | null
+          codigo: string
           /** La politica de RLS solo acepta 'pendiente' desde el navegador. */
           estado?: EstadoReserva
         }
@@ -186,11 +186,11 @@ export interface Database {
           cliente_id?: string | null
           fecha?: string
           hora_inicio?: string
-          hora_fin?: string | null
-          cliente_nombre?: string | null
-          cliente_email?: string | null
+          hora_fin?: string
+          cliente_nombre?: string
+          cliente_email?: string
           cliente_telefono?: string | null
-          codigo?: string | null
+          codigo?: string
           estado?: EstadoReserva
         }
         Relationships: []
