@@ -91,9 +91,14 @@ export default function BookingFlow() {
   const account = currentUser?.role === 'cliente' ? currentUser : null
   const reserva = useCrearReserva()
   const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
-  const [confirmado, setConfirmado] = useState<{ booking: Booking; servicioNombre: string } | null>(
-    null,
-  )
+  // Los nombres se guardan junto a la reserva porque la pantalla final ya no
+  // puede resolverlos: la reserva referencia ids de la base y los datos de
+  // ejemplo no los conocen.
+  const [confirmado, setConfirmado] = useState<{
+    booking: Booking
+    servicioNombre: string
+    profesionalNombre: string
+  } | null>(null)
 
   // Servicio, profesionales y horario salen de la base, no de los seeds.
   const servicioState = useServicioDetalle(bookingDraft.serviceId)
@@ -140,6 +145,7 @@ export default function BookingFlow() {
       <SuccessScreen
         booking={confirmado.booking}
         servicioNombre={confirmado.servicioNombre}
+        profesionalNombre={confirmado.profesionalNombre}
         registered={!confirmado.booking.guest}
       />
     )
@@ -333,7 +339,11 @@ export default function BookingFlow() {
               // "mis reservas" no puede leerlas de la base todavía.
               addBooking(booking)
               setBookingDraft(() => ({}))
-              setConfirmado({ booking, servicioNombre: service.nombre })
+              setConfirmado({
+                booking,
+                servicioNombre: service.nombre,
+                profesionalNombre: professional.name,
+              })
             })()
           }}
         />
@@ -803,15 +813,22 @@ function Row({ label, value }: { label: string; value: string }) {
 function SuccessScreen({
   booking,
   servicioNombre,
+  profesionalNombre,
   registered,
 }: {
   booking: Booking
   servicioNombre: string
+  /**
+   * Llega ya resuelto desde el asistente, igual que el nombre del servicio.
+   * Antes se buscaba con getProfessional() en los datos de ejemplo, pero la
+   * reserva guarda el id de la base: ahi no existe y se mostraba un guion.
+   * Consultarlo de nuevo seria una peticion de mas, porque el asistente ya
+   * tiene el profesional en la mano al confirmar.
+   */
+  profesionalNombre: string
   registered: boolean
 }) {
   const navigate = useNavigate()
-  const { getProfessional } = useAppState()
-  const professional = getProfessional(booking.professionalId)
 
   return (
     <div className="mx-auto max-w-xl px-6 py-16 text-center">
@@ -829,7 +846,7 @@ function SuccessScreen({
         <p className="text-xs font-medium tracking-wide text-muted-light">{booking.code}</p>
         <div className="mt-4 space-y-3 divide-y divide-line-soft text-sm [&>div]:pt-3 [&>div:first-child]:pt-0">
           <Row label="Servicio" value={servicioNombre} />
-          <Row label="Profesional" value={professional?.name ?? '—'} />
+          <Row label="Profesional" value={profesionalNombre} />
           <Row label="Fecha" value={formatLongDate(booking.dateISO)} />
           <Row label="Hora" value={`${booking.time} h`} />
           <Row label="Duración" value={`${booking.durationMin} min`} />
