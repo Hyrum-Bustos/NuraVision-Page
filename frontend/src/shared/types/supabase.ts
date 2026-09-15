@@ -14,6 +14,9 @@
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
+/** Enum `estado_reserva` de Postgres. */
+export type EstadoReserva = 'pendiente' | 'confirmada' | 'completada' | 'cancelada'
+
 export interface Database {
   public: {
     Tables: {
@@ -131,10 +134,73 @@ export interface Database {
         }
         Relationships: []
       }
+      /**
+       * Reservas. Tal como queda tras 0003_reservas.sql.
+       *
+       * Desde el navegador es de SOLO ESCRITURA: las politicas no otorgan
+       * SELECT al rol anonimo, asi que `Row` existe para tipar la tabla pero
+       * no hay consulta que lo devuelva todavia.
+       */
+      reservas: {
+        Row: {
+          /** bigint */
+          id: number
+          /** bigint, FK -> servicios.id */
+          servicio_id: number
+          /** bigint, FK -> profesionales.id */
+          profesional_id: number
+          /** uuid, FK -> perfiles.id. NULL en reservas sin cuenta. */
+          cliente_id: string | null
+          /** date, "YYYY-MM-DD" */
+          fecha: string
+          /** time, "HH:MM:SS" */
+          hora_inicio: string
+          /** time, "HH:MM:SS" */
+          hora_fin: string
+          cliente_nombre: string
+          cliente_email: string
+          cliente_telefono: string | null
+          /** Codigo visible para quien reserva sin cuenta. Unico. */
+          codigo: string
+          estado: EstadoReserva
+        }
+        Insert: {
+          id?: number
+          servicio_id: number
+          profesional_id: number
+          cliente_id?: string | null
+          fecha: string
+          hora_inicio: string
+          hora_fin: string
+          cliente_nombre: string
+          cliente_email: string
+          cliente_telefono?: string | null
+          codigo: string
+          /** La politica de RLS solo acepta 'pendiente' desde el navegador. */
+          estado?: EstadoReserva
+        }
+        Update: {
+          id?: number
+          servicio_id?: number
+          profesional_id?: number
+          cliente_id?: string | null
+          fecha?: string
+          hora_inicio?: string
+          hora_fin?: string
+          cliente_nombre?: string
+          cliente_email?: string
+          cliente_telefono?: string | null
+          codigo?: string
+          estado?: EstadoReserva
+        }
+        Relationships: []
+      }
     }
     Views: Record<never, never>
     Functions: Record<never, never>
-    Enums: Record<never, never>
+    Enums: {
+      estado_reserva: EstadoReserva
+    }
     CompositeTypes: Record<never, never>
   }
 }
