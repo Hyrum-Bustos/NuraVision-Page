@@ -7,7 +7,8 @@ import { useServicioDetalle } from '@/modules/servicios/ui/useServicioDetalle'
 import { useServicios } from '@/modules/servicios/ui/useServicios'
 import { useProfesionalesPorServicio } from '@/modules/profesionales/ui/useProfesionalesPorServicio'
 import { useDisponibilidad } from '@/modules/profesionales/ui/useDisponibilidad'
-import { getMonthDays, getSlotsForDate } from '@/shared/lib/availability'
+import { getMonthDays, getSlotsForDate, minutesToTime, timeToMinutes } from '@/shared/lib/availability'
+import { useCrearReserva } from '@/modules/reservas/ui/useCrearReserva'
 import { Stepper } from '@/shared/ui/Stepper'
 import { useScrollToTopOnChange } from '@/shared/components/ScrollToTop'
 import { Calendar } from '@/shared/components/Calendar'
@@ -88,6 +89,7 @@ export default function BookingFlow() {
   // Reservar no exige cuenta. Si hay un cliente con sesión, sus datos se
   // completan solos; si no, se piden en el paso de confirmación.
   const account = currentUser?.role === 'cliente' ? currentUser : null
+  const reserva = useCrearReserva()
   const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
   const [confirmado, setConfirmado] = useState<{ booking: Booking; servicioNombre: string } | null>(
     null,
@@ -281,27 +283,58 @@ export default function BookingFlow() {
           time={bookingDraft.time}
           account={account}
           onBack={() => clearFrom('time')}
+          guardando={reserva.guardando}
+          errorAlGuardar={reserva.error}
           onConfirm={(contact) => {
-            const booking: Booking = {
-              id: `b-${Date.now()}`,
-              code: generateCode(bookingDraft.dateISO!),
-              serviceId: service.id,
-              professionalId: professional.id,
-              clientName: contact.name,
-              clientEmail: contact.email,
-              clientPhone: contact.phone,
-              guest: !account,
-              dateISO: bookingDraft.dateISO!,
-              time: bookingDraft.time!,
-              durationMin: service.duracionMinutos,
-              price: service.precioBase,
-              status: 'confirmada',
-            }
-            addBooking(booking)
-            setBookingDraft(() => ({}))
-            // Se guarda el nombre junto a la reserva: la pantalla de éxito ya no
-            // puede resolverlo desde los datos de ejemplo.
-            setConfirmado({ booking, servicioNombre: service.nombre })
+            const codigo = generateCode(bookingDraft.dateISO!)
+            const horaInicio = bookingDraft.time!
+            // La hora de término se calcula al reservar y se guarda: si mañana
+            // cambia la duración del servicio, esta reserva conserva el bloque
+            // que realmente se tomó.
+            const horaFin = minutesToTime(timeToMinutes(horaInicio) + service.duracionMinutos)
+
+            void (async () => {
+              const guardada = await reserva.crear({
+                servicioId: service.id,
+                profesionalId: professional.id,
+                fecha: bookingDraft.dateISO!,
+                horaInicio,
+                horaFin,
+                clienteNombre: contact.name,
+                clienteEmail: contact.email,
+                clienteTelefono: contact.phone,
+                codigo,
+              })
+
+              // Si la base la rechazó no se avanza: el paso de confirmación
+              // muestra el error y conserva lo elegido para reintentar.
+              if (!guardada) return
+
+              const booking: Booking = {
+                id: `b-${Date.now()}`,
+                code: codigo,
+                serviceId: service.id,
+                professionalId: professional.id,
+                clientName: contact.name,
+                clientEmail: contact.email,
+                clientPhone: contact.phone,
+                guest: !account,
+                dateISO: bookingDraft.dateISO!,
+                time: horaInicio,
+                durationMin: service.duracionMinutos,
+                price: service.precioBase,
+                // La base la guarda como 'pendiente': confirmarla es decisión
+                // del estudio, no de quien reserva.
+                status: 'confirmada',
+              }
+
+              // El estado local sigue siendo el modelo de LECTURA: las
+              // políticas no otorgan SELECT sobre `reservas`, así que
+              // "mis reservas" no puede leerlas de la base todavía.
+              addBooking(booking)
+              setBookingDraft(() => ({}))
+              setConfirmado({ booking, servicioNombre: service.nombre })
+            })()
           }}
         />
       )}
@@ -606,6 +639,8 @@ function ConfirmStep({
   account,
   onBack,
   onConfirm,
+  guardando,
+  errorAlGuardar,
 }: {
   service: ServicioReservaVista
   professionalName: string
@@ -614,6 +649,8 @@ function ConfirmStep({
   account: CurrentUser | null
   onBack: () => void
   onConfirm: (contact: Contact) => void
+  guardando: boolean
+  errorAlGuardar: string | null
 }) {
   const [contact, setContact] = useState<Contact>(() =>
     account
@@ -705,6 +742,7 @@ function ConfirmStep({
           <Button
             full
             className="mt-6"
+            disabled={guardando}
             onClick={() => {
               setShowErrors(true)
               if (Object.keys(errors).length > 0) return
@@ -715,8 +753,16 @@ function ConfirmStep({
               })
             }}
           >
-            Confirmar reserva
+            {guardando ? 'Guardando…' : 'Confirmar reserva'}
           </Button>
+
+          {/* La reserva no quedó guardada: se informa aquí y el botón sigue
+              disponible para reintentar, sin perder lo que ya se eligió. */}
+          {errorAlGuardar && (
+            <p className="mt-3 rounded-xl border border-line px-4 py-3 text-sm text-ink">
+              {errorAlGuardar}
+            </p>
+          )}
           <p className="mt-3 text-center text-xs text-muted">
             Puedes cancelar sin costo hasta 12 h antes de tu hora.
           </p>
@@ -808,7 +854,11 @@ function SuccessScreen({
       )}
 
       <div className="mt-8 flex flex-wrap justify-center gap-4">
-        {registered && <Button onClick={() => navigate('/mis-reservas')}>Ver mis reservas</Button>}
+        {/* Al detalle de ESTA reserva, no al listado: es lo que se acaba de
+            confirmar y lo que la persona quiere ver. */}
+        {registered && (
+          <Button onClick={() => navigate(`/mis-reservas/${booking.id}`)}>Ver mi reserva</Button>
+        )}
         <Button variant={registered ? 'outline' : 'solid'} onClick={() => navigate('/')}>
           Volver al inicio
         </Button>
