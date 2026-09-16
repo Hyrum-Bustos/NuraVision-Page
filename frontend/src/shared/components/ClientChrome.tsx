@@ -10,7 +10,7 @@ function Brand() {
       <img
         src="/nuravision-logo.png"
         alt="Nuravision"
-        className="h-7 w-auto sm:h-8"
+        className="h-10 w-auto sm:h-12"
         width={800}
         height={267}
       />
@@ -166,7 +166,13 @@ export function ClientFooter() {
   return (
     <footer className="border-t border-line-soft bg-ivory">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
-        <span className="font-serif-display text-xl text-ink">Estudio Nura</span>
+        <img
+          src="/nuravision-logo.png"
+          alt="Nuravision"
+          className="h-8 w-auto"
+          width={800}
+          height={267}
+        />
         <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted">
           <span>Av. Libertad 1250, Viña del Mar</span>
           <span>+56 9 1234 5678</span>
