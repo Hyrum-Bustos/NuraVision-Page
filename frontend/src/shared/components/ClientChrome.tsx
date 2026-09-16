@@ -12,7 +12,7 @@ function Brand() {
         alt="Nuravision"
         className="h-10 w-auto sm:h-12"
         width={800}
-        height={267}
+        height={266}
       />
     </NavLink>
   )
@@ -169,9 +169,9 @@ export function ClientFooter() {
         <img
           src="/nuravision-logo.png"
           alt="Nuravision"
-          className="h-12 w-auto sm:h-14"
+          className="h-12 w-auto shrink-0 sm:h-14"
           width={800}
-          height={267}
+          height={266}
         />
         <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted">
           <span>Av. Libertad 1250, Viña del Mar</span>
