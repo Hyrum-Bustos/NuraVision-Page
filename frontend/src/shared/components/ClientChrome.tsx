@@ -169,7 +169,7 @@ export function ClientFooter() {
         <img
           src="/nuravision-logo.png"
           alt="Nuravision"
-          className="h-8 w-auto"
+          className="h-12 w-auto sm:h-14"
           width={800}
           height={267}
         />
