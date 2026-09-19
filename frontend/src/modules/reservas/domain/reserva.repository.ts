@@ -3,10 +3,10 @@ import type { NuevaReserva, Reserva } from './reserva.types'
 /**
  * Puerto de acceso a reservas.
  *
- * La lectura esta acotada por RLS a las reservas propias
- * (0004_auth_reservas_policy.sql). No existe, ni debe existir, un metodo para
- * listarlas todas desde el navegador: eso expondria el contacto de todos los
- * clientes a cualquiera con la anon key.
+ * La lectura y la escritura estan acotadas por RLS a las reservas propias
+ * (0004 y 0005). No existe, ni debe existir, un metodo para listarlas todas
+ * desde el navegador: eso expondria el contacto de todos los clientes a
+ * cualquiera con la anon key.
  */
 export interface ReservaRepository {
   /**
@@ -28,4 +28,28 @@ export interface ReservaRepository {
    * politica no las alcanza.
    */
   listarMias(): Promise<Reserva[]>
+
+  /**
+   * Una reserva propia por su id, o `null` si no existe o no es de quien
+   * consulta. Los dos casos son indistinguibles a proposito: la politica de
+   * RLS oculta las ajenas, y distinguirlos revelaria que ese id existe.
+   */
+  obtenerMiaPorId(id: string): Promise<Reserva | null>
+
+  /**
+   * Deja la reserva en estado 'cancelada'.
+   *
+   * No borra la fila: el estudio necesita el registro de que esa hora existio
+   * y se libero. Devuelve la fila actualizada.
+   */
+  cancelar(id: string): Promise<Reserva>
+
+  /**
+   * Cambia el bloque horario de la reserva.
+   *
+   * La devuelve a 'pendiente' aunque estuviera confirmada: cambiar la hora
+   * obliga al estudio a confirmar el bloque nuevo, y ademas es lo unico que
+   * acepta la politica de 0005. Devuelve la fila actualizada.
+   */
+  reprogramar(id: string, fecha: string, horaInicio: string, horaFin: string): Promise<Reserva>
 }

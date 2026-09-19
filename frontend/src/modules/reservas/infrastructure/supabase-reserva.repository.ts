@@ -1,9 +1,41 @@
+import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from '@/shared/infrastructure/supabase/client'
 import type { ReservaRepository } from '../domain/reserva.repository'
 import type { NuevaReserva, Reserva } from '../domain/reserva.types'
 import { toReserva, toReservaInsert } from './reserva.mapper'
 
 const TABLA = 'reservas'
+
+/**
+ * Lo que PostgREST devuelve cuando RLS deja pasar cero filas.
+ *
+ * Es el detalle mas facil de pasar por alto de toda la integracion: un UPDATE
+ * que la politica rechaza NO da error. Devuelve 200 y una lista vacia, porque
+ * para PostgREST "ninguna fila cumplia" es un resultado legitimo. Sin esta
+ * comprobacion, cancelar una reserva ajena o ya cancelada se veria como un
+ * exito y la interfaz mentiria.
+ */
+function faltaLaFila(filas: unknown[] | null): boolean {
+  return !filas || filas.length === 0
+}
+
+/** Traduce el rechazo por RLS a algo accionable. */
+function mensajeDe(error: PostgrestError, accion: string, migracion: string): string {
+  if (error.code === '42501') {
+    return `La base rechazó ${accion} por sus políticas de seguridad. ` +
+      `Revisa que la migración ${migracion} esté aplicada.`
+  }
+  return `No se pudo ${accion}: ${error.message}`
+}
+
+/** El id viaja como texto en el dominio, pero la columna es bigint. */
+function aIdNumerico(id: string): number {
+  const numero = Number(id)
+  if (!Number.isInteger(numero)) {
+    throw new Error('Esa reserva no existe.')
+  }
+  return numero
+}
 
 /** Implementacion de `ReservaRepository` sobre Supabase. */
 export class SupabaseReservaRepository implements ReservaRepository {
@@ -56,6 +88,77 @@ export class SupabaseReservaRepository implements ReservaRepository {
     }
 
     return (data ?? []).map(toReserva)
+  }
+
+  async obtenerMiaPorId(id: string): Promise<Reserva | null> {
+    const { data, error } = await supabase
+      .from(TABLA)
+      .select('*')
+      .eq('id', aIdNumerico(id))
+      // maybeSingle y no single: que no exista (o que sea de otra persona, que
+      // para RLS es lo mismo) no es un error, es una respuesta.
+      .maybeSingle()
+
+    if (error) {
+      throw new Error(mensajeDe(error, 'leer la reserva', '0004_auth_reservas_policy.sql'))
+    }
+
+    return data ? toReserva(data) : null
+  }
+
+  async cancelar(id: string): Promise<Reserva> {
+    const { data, error } = await supabase
+      .from(TABLA)
+      .update({ estado: 'cancelada' })
+      .eq('id', aIdNumerico(id))
+      .select()
+
+    if (error) {
+      throw new Error(mensajeDe(error, 'cancelar la reserva', '0005_reservas_update_policy.sql'))
+    }
+
+    if (faltaLaFila(data)) {
+      throw new Error(
+        'No pudimos cancelar esa reserva. Puede que ya esté cancelada o completada, ' +
+          'o que no sea tuya.',
+      )
+    }
+
+    return toReserva(data![0])
+  }
+
+  async reprogramar(
+    id: string,
+    fecha: string,
+    horaInicio: string,
+    horaFin: string,
+  ): Promise<Reserva> {
+    const { data, error } = await supabase
+      .from(TABLA)
+      .update({
+        fecha,
+        hora_inicio: horaInicio,
+        hora_fin: horaFin,
+        // Vuelve a 'pendiente' aunque estuviera confirmada: el bloque nuevo lo
+        // tiene que confirmar el estudio. Ademas es lo unico que acepta la
+        // politica de 0005, que no deja a nadie auto-confirmarse una hora.
+        estado: 'pendiente',
+      })
+      .eq('id', aIdNumerico(id))
+      .select()
+
+    if (error) {
+      throw new Error(mensajeDe(error, 'reprogramar la reserva', '0005_reservas_update_policy.sql'))
+    }
+
+    if (faltaLaFila(data)) {
+      throw new Error(
+        'No pudimos reprogramar esa reserva. Puede que ya esté cancelada o completada, ' +
+          'o que no sea tuya.',
+      )
+    }
+
+    return toReserva(data![0])
   }
 }
 
