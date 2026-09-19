@@ -39,12 +39,11 @@ interface FilaReserva {
   precio: number | null
   estado: BadgeStatus
   /**
-   * La pantalla de detalle lee del estado local y ademas permite reprogramar y
-   * cancelar, dos cosas que la base todavia no acepta (no hay politicas de
-   * UPDATE). Enlazar ahi una reserva de la base llevaria a "Reserva no
-   * encontrada", asi que el enlace solo se ofrece cuando puede funcionar.
+   * Si la reserva se puede cambiar. Desde 0005 la base acepta cancelar y
+   * reprogramar lo propio, asi que las dos fuentes tienen pantalla de detalle;
+   * lo que cambia es que solo una reserva viva ofrece acciones ahi.
    */
-  tieneDetalle: boolean
+  editable: boolean
 }
 
 const ESTADOS_POR_PESTANA: Record<Tab, BadgeStatus[]> = {
@@ -69,7 +68,9 @@ function desdeReserva(reserva: Reserva, precio: number | null): FilaReserva {
     duracionMin: timeToMinutes(reserva.horaFin) - timeToMinutes(reserva.horaInicio),
     precio,
     estado: reserva.estado,
-    tieneDetalle: false,
+    // Cancelar y reprogramar solo tienen sentido mientras la reserva sigue
+    // viva; es la misma condicion que aplica la politica de 0005.
+    editable: reserva.estado === 'pendiente' || reserva.estado === 'confirmada',
   }
 }
 
@@ -84,7 +85,7 @@ function desdeBooking(booking: Booking): FilaReserva {
     duracionMin: booking.durationMin,
     precio: booking.price,
     estado: booking.status,
-    tieneDetalle: true,
+    editable: booking.status === 'confirmada' || booking.status === 'en_curso',
   }
 }
 
@@ -242,23 +243,19 @@ export default function MyBookings() {
                   <p className="mt-1 text-xs tracking-wide text-muted-light">{f.codigo}</p>
                 </div>
                 <div className="flex gap-3">
-                  {f.tieneDetalle && (
-                    <>
-                      <Link
-                        to={`/mis-reservas/${f.id}`}
-                        className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink hover:bg-ivory"
-                      >
-                        Detalle
-                      </Link>
-                      {(f.estado === 'confirmada' || f.estado === 'en_curso') && (
-                        <Link
-                          to={`/mis-reservas/${f.id}`}
-                          className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink hover:bg-ivory"
-                        >
-                          Reprogramar
-                        </Link>
-                      )}
-                    </>
+                  <Link
+                    to={`/mis-reservas/${f.id}`}
+                    className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink hover:bg-ivory"
+                  >
+                    Detalle
+                  </Link>
+                  {f.editable && (
+                    <Link
+                      to={`/mis-reservas/${f.id}`}
+                      className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink hover:bg-ivory"
+                    >
+                      Reprogramar
+                    </Link>
                   )}
                 </div>
               </div>
