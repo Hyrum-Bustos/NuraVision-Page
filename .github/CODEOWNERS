@@ -1,0 +1,10 @@
+# Propietario del repositorio. Todo pull request requiere su aprobacion.
+#
+# Combinado con la regla "require_code_owner_review" del ruleset
+# "main & develop protection", ninguna rama protegida se puede mergear
+# sin que @Hyrum-Bustos revise, aunque otro colaborador ya haya aprobado.
+#
+# El rol admin conserva bypass, de modo que el propietario puede mergear
+# sus propios pull requests sin esperar una aprobacion externa.
+
+* @Hyrum-Bustos
