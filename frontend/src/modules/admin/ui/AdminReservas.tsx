@@ -156,16 +156,17 @@ export default function AdminReservas() {
         </div>
       )}
 
-      {/* Sin política de RLS para el personal, la base responde "cero filas"
-          en vez de un error. Vacío y sin permiso son indistinguibles desde
-          aquí, así que se nombran los dos en vez de afirmar solo uno. */}
+      {/* Si la sesión no es de personal, la base responde "cero filas" en vez
+          de un error: RLS filtra, no rechaza. Vacío y sin permiso son
+          indistinguibles desde aquí, así que se nombran los dos. */}
       {!cargando && !error && reservas.length === 0 && (
         <div className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center">
           <p className="font-medium text-ink">No hay reservas que mostrar</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-            O no hay ninguna que cumpla estos filtros, o la base todavía no permite al estudio
-            leer reservas ajenas. Row Level Security no distingue los dos casos: cuando falta la
-            política, devuelve una lista vacía en vez de un error.
+            O no hay ninguna que cumpla estos filtros, o esta sesión no está marcada como
+            personal del estudio. Row Level Security no distingue los dos casos: cuando no hay
+            permiso, filtra las filas en vez de dar error. Se marca con <code>es_staff</code> en{' '}
+            <code>app_metadata</code>, y el cambio se aplica al volver a iniciar sesión.
           </p>
         </div>
       )}

@@ -6,16 +6,18 @@ import { toReservaGestion } from './reserva-gestion.mapper'
 const TABLA = 'reservas'
 
 /**
- * Mensaje unico para el caso que hoy se da SIEMPRE: la base no deja al estudio
- * tocar reservas ajenas porque no hay una politica que lo permita.
+ * Mensaje para el rechazo por RLS.
  *
- * Merece un texto propio porque es indistinguible de "no hay reservas": RLS no
- * da error, simplemente no devuelve filas. Sin decirlo, el panel parece vacio y
- * nadie sabria que falta una migracion.
+ * Merece un texto propio porque las dos causas probables no son un fallo del
+ * codigo sino de configuracion, y sin nombrarlas el panel solo diria
+ * "permission denied". O falta aplicar 0006, o la sesion no esta marcada como
+ * personal: `es_staff` se escribe en `app_metadata` con la service_role key, y
+ * el JWT solo la recoge al iniciar sesion o al refrescarse.
  */
 const FALTA_POLITICA =
-  'La base no permite al estudio gestionar reservas: todavía no existe una política ' +
-  'de RLS para el personal. Revisa supabase/migrations.'
+  'La base no permite a esta sesión gestionar reservas. Revisa que la migración ' +
+  '0006_admin_staff_policy.sql esté aplicada y que tu cuenta tenga es_staff en ' +
+  'app_metadata; si acabas de marcarla, cierra sesión y vuelve a entrar.'
 
 /** El id viaja como texto en el dominio, pero la columna es bigint. */
 function aIdNumerico(id: string): number {
