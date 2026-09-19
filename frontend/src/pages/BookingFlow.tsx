@@ -5,6 +5,7 @@ import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
 import type { Servicio } from '@/modules/servicios/domain/servicio.types'
 import { useServicioDetalle } from '@/modules/servicios/ui/useServicioDetalle'
 import { useServicios } from '@/modules/servicios/ui/useServicios'
+import { imagenDeServicio } from '@/modules/servicios/ui/servicio.imagenes'
 import { useProfesionalesPorServicio } from '@/modules/profesionales/ui/useProfesionalesPorServicio'
 import { useDisponibilidad } from '@/modules/profesionales/ui/useDisponibilidad'
 import { getMonthDays, getSlotsForDate, minutesToTime, timeToMinutes } from '@/shared/lib/availability'
@@ -39,8 +40,12 @@ interface ServicioReservaVista {
   categoria: ServiceCategoryId
   duracionMinutos: number
   precioBase: number
-  /** Sin columna de imagen en la base: AppImage cae en su placeholder. */
-  imagenUrl: string | undefined
+  /**
+   * La tabla `servicios` aun no tiene columna de imagen: la resuelve
+   * `imagenDeServicio`, que siempre devuelve una. Por eso no es opcional y la
+   * tarjeta nunca cae en el marcador a rayas.
+   */
+  imagenUrl: string
 }
 
 function toVista(servicio: Servicio): ServicioReservaVista {
@@ -50,7 +55,7 @@ function toVista(servicio: Servicio): ServicioReservaVista {
     categoria: servicio.categoria,
     duracionMinutos: servicio.duracionMinutos,
     precioBase: servicio.precioBase,
-    imagenUrl: undefined,
+    imagenUrl: imagenDeServicio(servicio.nombre, servicio.categoria),
   }
 }
 
@@ -432,10 +437,13 @@ function ServiceStep({
               <button
                 key={s.id}
                 onClick={() => onSelect(s.id)}
-                className="flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-paper text-left transition-shadow hover:shadow-md"
+                className="card-hover flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-paper text-left"
               >
+                {/* `overflow-hidden` del contenedor recorta la imagen con el
+                    mismo radio de la tarjeta, sin redondearla por su cuenta:
+                    asi no quedan esquinas dobles. */}
                 <AppImage
-                  src={undefined}
+                  src={imagenDeServicio(s.nombre, s.categoria)}
                   label={s.nombre.split(' ')[0].toUpperCase()}
                   alt={s.nombre}
                   className="aspect-[4/3] w-full"
