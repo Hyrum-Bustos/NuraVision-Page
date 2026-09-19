@@ -9,6 +9,7 @@ import { useProfesionalesPorServicio } from '@/modules/profesionales/ui/useProfe
 import { useDisponibilidad } from '@/modules/profesionales/ui/useDisponibilidad'
 import { getMonthDays, getSlotsForDate, minutesToTime, timeToMinutes } from '@/shared/lib/availability'
 import { useCrearReserva } from '@/modules/reservas/ui/useCrearReserva'
+import { useAuth } from '@/modules/auth/ui/useAuth'
 import { Stepper } from '@/shared/ui/Stepper'
 import { useScrollToTopOnChange } from '@/shared/components/ScrollToTop'
 import { Calendar } from '@/shared/components/Calendar'
@@ -17,7 +18,7 @@ import { AppImage, Avatar, Button, Kicker } from '@/shared/ui/ui'
 import { formatLongDate, formatPrice, formatWeekdayLong, monthLabel } from '@/shared/lib/format'
 import { TextField } from '@/shared/ui/form'
 import { pointsForPrice } from '@/shared/lib/loyalty'
-import type { Booking, CurrentUser, Professional, ServiceCategoryId } from '@/shared/types'
+import type { Booking, Professional, ServiceCategoryId } from '@/shared/types'
 import type { Profesional } from '@/modules/profesionales/domain/profesional.types'
 
 type Step = 'service' | 'professional' | 'date' | 'time' | 'confirm'
@@ -86,9 +87,22 @@ function Aviso({
 
 export default function BookingFlow() {
   const { currentUser, bookingDraft, setBookingDraft, addBooking, bookings } = useAppState()
-  // Reservar no exige cuenta. Si hay un cliente con sesión, sus datos se
-  // completan solos; si no, se piden en el paso de confirmación.
-  const account = currentUser?.role === 'cliente' ? currentUser : null
+  const { usuario } = useAuth()
+  // Reservar no exige cuenta. Si hay sesión, sus datos se completan solos; si
+  // no, se piden en el paso de confirmación.
+  //
+  // La sesión de Supabase tiene prioridad sobre el usuario de demostración:
+  // es la única que corresponde a una cuenta real, y por tanto la única que
+  // puede quedar asociada a la reserva en la base.
+  const cuenta: Contact | null = usuario
+    ? {
+        name: usuario.nombre ?? '',
+        email: usuario.email,
+        phone: usuario.telefono ?? '',
+      }
+    : currentUser?.role === 'cliente'
+      ? { name: currentUser.name, email: currentUser.email, phone: currentUser.phone }
+      : null
   const reserva = useCrearReserva()
   const [calendarView, setCalendarView] = useState({ year: 2026, month: 8 })
   // Los nombres se guardan junto a la reserva porque la pantalla final ya no
@@ -287,7 +301,8 @@ export default function BookingFlow() {
           professionalName={professional.name}
           dateISO={bookingDraft.dateISO}
           time={bookingDraft.time}
-          account={account}
+          cuenta={cuenta}
+          conSesion={usuario !== null}
           onBack={() => clearFrom('time')}
           guardando={reserva.guardando}
           errorAlGuardar={reserva.error}
@@ -310,6 +325,12 @@ export default function BookingFlow() {
                 clienteEmail: contact.email,
                 clienteTelefono: contact.phone,
                 codigo,
+                // Con sesión la reserva queda asociada a la cuenta, y es lo
+                // único que después permite leerla: la política de RLS
+                // entrega las filas cuyo cliente_id coincide con auth.uid().
+                // Sin sesión va NULL, que es lo que la política de inserción
+                // exige del rol anónimo.
+                clienteId: usuario?.id ?? null,
               })
 
               // Si la base la rechazó no se avanza: el paso de confirmación
@@ -324,7 +345,10 @@ export default function BookingFlow() {
                 clientName: contact.name,
                 clientEmail: contact.email,
                 clientPhone: contact.phone,
-                guest: !account,
+                // Invitada es quien reserva sin cuenta de Supabase: solo esa
+                // sesión deja la reserva asociada a un perfil. El usuario de
+                // demostración no crea ninguna.
+                guest: usuario === null,
                 dateISO: bookingDraft.dateISO!,
                 time: horaInicio,
                 durationMin: service.duracionMinutos,
@@ -646,7 +670,8 @@ function ConfirmStep({
   professionalName,
   dateISO,
   time,
-  account,
+  cuenta,
+  conSesion,
   onBack,
   onConfirm,
   guardando,
@@ -656,18 +681,27 @@ function ConfirmStep({
   professionalName: string
   dateISO: string
   time: string
-  account: CurrentUser | null
+  /** Datos de la cuenta con sesión, si los hay, para rellenar el formulario. */
+  cuenta: Contact | null
+  /** Sesión real de Supabase: es lo que decide si la reserva queda asociada. */
+  conSesion: boolean
   onBack: () => void
   onConfirm: (contact: Contact) => void
   guardando: boolean
   errorAlGuardar: string | null
 }) {
-  const [contact, setContact] = useState<Contact>(() =>
-    account
-      ? { name: account.name, email: account.email, phone: account.phone }
-      : { name: '', email: '', phone: '' },
+  const [contact, setContact] = useState<Contact>(
+    () => cuenta ?? { name: '', email: '', phone: '' },
   )
   const [showErrors, setShowErrors] = useState(false)
+
+  // Una cuenta de Supabase puede no tener nombre ni teléfono: al registrarse
+  // solo el correo es obligatorio. Si falta algo se piden los datos igual, ya
+  // rellenados con lo que se sepa, en vez de mandar a la base una reserva sin
+  // nombre que la restricción CHECK va a rechazar.
+  const datosCompletos = Boolean(
+    cuenta && cuenta.name.trim() && cuenta.email.trim() && cuenta.phone.trim(),
+  )
 
   const errors = useMemo(() => {
     const next: Partial<Record<keyof Contact, string>> = {}
@@ -712,10 +746,10 @@ function ConfirmStep({
           {/* Sin cuenta, el correo y el teléfono son el único vínculo con la
               reserva: no hay perfil donde consultarla después. */}
           <div className="border-t border-line-soft p-6">
-            <Kicker>{account ? 'Tus datos' : 'Tus datos de contacto'}</Kicker>
-            {account ? (
+            <Kicker>{datosCompletos ? 'Tus datos' : 'Tus datos de contacto'}</Kicker>
+            {datosCompletos && cuenta ? (
               <p className="mt-3 text-sm text-muted">
-                Reservas como <span className="text-ink">{account.name}</span> ({account.email}).
+                Reservas como <span className="text-ink">{cuenta.name}</span> ({cuenta.email}).
               </p>
             ) : (
               <div className="mt-4 space-y-4">
@@ -777,7 +811,7 @@ function ConfirmStep({
             Puedes cancelar sin costo hasta 12 h antes de tu hora.
           </p>
 
-          {!account && (
+          {!conSesion && (
             <div className="mt-5 border-t border-line pt-5 text-xs text-muted">
               <p>
                 Estás reservando sin cuenta. Tu hora queda igual de confirmada, pero no quedará

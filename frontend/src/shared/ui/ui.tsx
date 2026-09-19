@@ -118,21 +118,33 @@ export function AppImage({
   )
 }
 
-const statusStyles: Record<BookingStatus, string> = {
+/**
+ * Estados que sabe pintar la insignia.
+ *
+ * Incluye 'pendiente', que no existe en `BookingStatus` pero si en la base:
+ * es el unico estado con el que se pueden crear reservas desde el navegador
+ * (ver 0003_reservas.sql). Sin el, una reserva recien hecha y leida de vuelta
+ * no tendria como mostrarse.
+ */
+export type BadgeStatus = BookingStatus | 'pendiente'
+
+const statusStyles: Record<BadgeStatus, string> = {
+  pendiente: 'bg-line-soft text-ink',
   confirmada: 'bg-olive-50 text-olive-700',
   en_curso: 'bg-lavender text-[#4a3a63]',
   completada: 'bg-line-soft text-muted',
   cancelada: 'bg-danger-soft text-danger',
 }
 
-const statusLabels: Record<BookingStatus, string> = {
+const statusLabels: Record<BadgeStatus, string> = {
+  pendiente: 'Por confirmar',
   confirmada: 'Confirmada',
   en_curso: 'En curso',
   completada: 'Completada',
   cancelada: 'Cancelada',
 }
 
-export function StatusBadge({ status }: { status: BookingStatus }) {
+export function StatusBadge({ status }: { status: BadgeStatus }) {
   return (
     <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyles[status]}`}>
       {statusLabels[status]}
