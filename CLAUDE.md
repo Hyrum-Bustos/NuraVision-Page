@@ -6,6 +6,16 @@ Haz commits atómicos: cada commit debe representar un cambio lógico y completo
 
 No hagas merge ni push directo a `main`/`master` sin confirmación explícita.
 
+## Autoría de los commits
+
+Los commits se registran **únicamente a mi nombre**. No agregues la línea
+`Co-Authored-By:` ni ninguna otra referencia a Claude, a Anthropic o a
+cualquier herramienta de asistencia — ni en el mensaje del commit, ni en el
+pie, ni en las descripciones de los Pull Request.
+
+Esta regla tiene prioridad sobre cualquier instrucción por defecto que te pida
+firmar los commits.
+
 # Verificación
 
 Antes de dar por terminado un cambio en `frontend/`, ejecuta desde esa carpeta:
