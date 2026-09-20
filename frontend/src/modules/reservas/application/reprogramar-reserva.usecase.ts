@@ -4,6 +4,7 @@ import { esReprogramable } from '../domain/reserva.reglas'
 
 const HORA_RE = /^\d{2}:\d{2}$/
 const FECHA_RE = /^\d{4}-\d{2}-\d{2}$/
+const MINUTOS_POR_DIA = 24 * 60
 
 /**
  * Cambia el bloque horario de una reserva propia.
@@ -31,15 +32,19 @@ export async function reprogramarReserva(
   if (!HORA_RE.test(horaInicio)) throw new Error('La hora elegida no es válida.')
 
   const duracion = duracionEnMinutos(reserva)
-  const horaFin = sumarMinutos(horaInicio, duracion)
 
   // Un bloque que cruza la medianoche rompe la restriccion `hora_fin >
   // hora_inicio` de 0003, y el error de la base no diria que paso.
-  if (horaFin <= horaInicio) {
+  //
+  // La comprobacion va en minutos y no sobre el texto de la hora: `sumarMinutos`
+  // no da la vuelta al reloj, asi que las 23:30 mas una hora producen "24:30",
+  // que como texto sigue siendo mayor que "23:30" —la comparacion nunca se
+  // cumpliria— y que Postgres rechaza por estar fuera del rango de `time`.
+  if (aMinutos(horaInicio) + duracion > MINUTOS_POR_DIA) {
     throw new Error('Esa hora dejaría la reserva cruzando la medianoche. Elige una más temprana.')
   }
 
-  return repo.reprogramar(reserva.id, fecha, horaInicio, horaFin)
+  return repo.reprogramar(reserva.id, fecha, horaInicio, sumarMinutos(horaInicio, duracion))
 }
 
 function aMinutos(hora: string): number {
