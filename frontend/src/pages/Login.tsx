@@ -1,21 +1,42 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppState } from '@/shared/state/AppState'
+import { useAuth } from '@/modules/auth/ui/useAuth'
 import { AppImage, Button, Kicker } from '@/shared/ui/ui'
 import type { Role } from '@/shared/types'
 
 export default function Login() {
   const { login, siteContent, realDataOnly, setRealDataOnly } = useAppState()
+  const { signInWithPassword } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('camila.torres@correo.cl')
-  const [password, setPassword] = useState('••••••••••')
+  // Sin valores de ejemplo: este formulario ya no simula una sesión, entra de
+  // verdad contra Supabase y una credencial inventada solo daría un error.
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
+  const [entrando, setEntrando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   function enterAs(role: Role) {
     login(role)
     if (role === 'profesional') navigate('/profesional')
     else if (role === 'administrador') navigate('/admin')
     else navigate('/')
+  }
+
+  async function iniciarSesion() {
+    setEntrando(true)
+    setError(null)
+    try {
+      await signInWithPassword({ email, password })
+      // La sesión ya está en el contexto: lo que sigue es llevar a la persona
+      // a donde iba, no guardar nada más.
+      navigate('/mis-reservas')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'No pudimos iniciar tu sesión.')
+    } finally {
+      setEntrando(false)
+    }
   }
 
   return (
@@ -32,7 +53,7 @@ export default function Login() {
           className="mt-8 max-w-sm space-y-5"
           onSubmit={(e) => {
             e.preventDefault()
-            enterAs('cliente')
+            void iniciarSesion()
           }}
         >
           <div>
@@ -40,6 +61,8 @@ export default function Login() {
               Correo electrónico
             </label>
             <input
+              type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-3 text-sm text-ink outline-none focus:border-ink"
@@ -51,6 +74,7 @@ export default function Login() {
             </label>
             <input
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-2 w-full rounded-lg border border-line bg-paper px-4 py-3 text-sm text-ink outline-none focus:border-ink"
@@ -70,9 +94,16 @@ export default function Login() {
               ¿Olvidaste tu contraseña?
             </button>
           </div>
-          <Button type="submit" full>
-            Iniciar sesión
+          <Button type="submit" full disabled={entrando}>
+            {entrando ? 'Entrando…' : 'Iniciar sesión'}
           </Button>
+
+          {error && (
+            <p className="rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink">
+              {error}
+            </p>
+          )}
+
           <p className="text-center text-sm text-muted">
             ¿No tienes cuenta?{' '}
             <Link to="/registro" className="font-medium text-ink underline underline-offset-4">
@@ -83,6 +114,14 @@ export default function Login() {
 
         <div className="mt-10 max-w-sm border-t border-line-soft pt-6">
           <Kicker>Prototipo · Entrar como</Kicker>
+          {/* Estos atajos siguen siendo del prototipo: cambian el rol en el
+              estado local pero NO crean una sesión de Supabase. Una reserva
+              hecha así se guarda como invitada y no aparece en "mis
+              reservas", porque no queda asociada a ninguna cuenta. */}
+          <p className="mt-2 text-xs text-muted">
+            Atajos del prototipo. No crean una sesión real: para ver tus reservas guardadas, entra
+            con tu correo y contraseña.
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               onClick={() => enterAs('cliente')}
