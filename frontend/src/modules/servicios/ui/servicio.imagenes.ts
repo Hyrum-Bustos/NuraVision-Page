@@ -3,17 +3,29 @@ import type { ServiceCategoryId } from '@/shared/types'
 /**
  * Imagen de cada servicio del catalogo.
  *
- * Mientras la tabla `servicios` no tenga columna de imagen, las tarjetas caian
- * en el marcador a rayas. Esto las llena sin tocar el esquema.
+ * Mientras la tabla `servicios` no tenga columna de imagen, las tarjetas
+ * caerian en el marcador a rayas. Esto las llena sin tocar el esquema.
  *
- * SE ASOCIA POR NOMBRE, NO POR ID. Los ids salen de una secuencia de Postgres:
- * cambian si se re-ejecuta el seed, si se borra un servicio o si el estudio
- * carga el catalogo en otro orden. Un mapa por id se habria desalineado en
- * silencio —cada servicio con la foto de otro— y nada lo habria detectado. El
- * nombre es lo unico estable que la aplicacion conoce de los dos lados.
+ * ----------------------------------------------------------------------------
+ * POR QUE SE EMPAREJA POR PALABRAS Y NO POR NOMBRE EXACTO
+ * ----------------------------------------------------------------------------
+ * La primera version usaba un mapa de nombre exacto -> imagen. Duro hasta la
+ * primera vez que el estudio edito el catalogo: renombrar "Corte de Pelo" a
+ * "Corte de Pelo Mujer" o partir "Cejas y Pestañas" en dos servicios basto
+ * para que 8 de 17 servicios dejaran de encontrar su imagen y cayeran todos en
+ * la generica de su categoria. El resultado en pantalla eran cuatro tarjetas
+ * con la misma foto de un salon vacio.
  *
- * Cuando `servicios` tenga su propia columna, este archivo se borra y la URL
- * pasa a venir de la base.
+ * Y lo peor no fue el fallo, sino que fue SILENCIOSO: cada servicio seguia
+ * mostrando una imagen, solo que la equivocada.
+ *
+ * Por eso ahora se busca por palabras dentro del nombre. Un servicio que se
+ * llame "Cejas", "Arreglo de cejas" o "Diseño de cejas con henna" cae en la
+ * misma regla, y una errata como "Extenciones" (que es como esta escrito hoy
+ * en la base) tampoco lo rompe.
+ *
+ * Cuando `servicios` tenga su propia columna de imagen, este archivo se borra
+ * y la URL pasa a venir de la base.
  */
 
 const BASE = 'https://images.unsplash.com'
@@ -27,57 +39,73 @@ function foto(id: string): string {
 
 /**
  * Normaliza para comparar: sin tildes, en minusculas y con los espacios
- * colapsados. Misma convencion que `servicio.mapper.ts`, de modo que
- * "Coloración", "COLORACION" y " coloracion " sean la misma clave.
+ * colapsados. Misma convencion que `servicio.mapper.ts`.
  */
 function normalizar(valor: string): string {
   return valor
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
 }
 
 /**
- * Imagen por servicio, con la clave ya normalizada.
+ * Reglas de emparejamiento, EN ORDEN: gana la primera que coincida.
  *
- * Cubre los 14 servicios del seed. Un servicio que el estudio agregue despues
- * no estara aqui y caera en la imagen de su categoria, que es el motivo de que
- * exista ese segundo nivel.
+ * El orden es parte de la logica, no un detalle de estilo. "Esmaltado
+ * permanente" tiene que probarse antes que "esmaltado" a secas, y los alisados
+ * concretos antes que el alisado generico; al reves, la regla amplia se
+ * tragaria a la especifica y la de abajo no se evaluaria nunca.
+ *
+ * Los patrones se comparan contra el nombre YA normalizado, asi que se
+ * escriben sin tildes.
  */
-const POR_NOMBRE: Record<string, string> = {
-  // Cabello
-  'corte de pelo': foto('photo-1562322140-8baeececf3df'),
-  peinado: foto('photo-1560869713-7d0a29430803'),
-  brushing: foto('photo-1519699047748-de8e457a634e'),
-  coloracion: foto('photo-1522337360788-8b13dee7a37e'),
-  'tratamiento capilar': foto('photo-1595476108010-b4d1f102b1b1'),
+const REGLAS: { patron: RegExp; foto: string }[] = [
+  // --- Estetica ---
+  // La mirada marcada va en pestanas; en cejas va el trabajo sobre el rostro.
+  // El retrato tiene unos labios rojos muy prominentes y en una tarjeta de
+  // cejas lo primero que se lee son ellos: es justo el fallo que se reporto.
+  // Antes que nada lo que lleva "pestanas": un servicio de cejas Y pestañas
+  // deberia ilustrarse con la mirada completa.
+  { patron: /pestana|lifting/, foto: foto('photo-1616683693504-3ea7e9ad6fec') },
+  { patron: /\bceja/, foto: foto('photo-1570172619644-dfd03ed5d881') },
+  { patron: /maquillaje|make ?up/, foto: foto('photo-1571875257727-256c39da42af') },
+  { patron: /depilaci|depilado|cera\b/, foto: foto('photo-1519823551278-64ac92734fb1') },
+  { patron: /facial|limpieza de cutis/, foto: foto('photo-1616394584738-fc6e612e71b9') },
 
-  // Uñas
-  'manicura completa': foto('photo-1632345031435-8727f6897d53'),
-  'esmaltado tradicional': foto('photo-1610992015732-2449b76344bc'),
-  'esmaltado permanente': foto('photo-1604654894610-df63bc536371'),
-  'esculpido de unas': foto('photo-1519014816548-bf5fe059798b'),
-  // Sin entrada propia a proposito: es el mismo servicio que "Manicura
-  // Completa" pero mas corto, asi que cae en la imagen de la categoria.
+  // --- Uñas ---
+  // Las extensiones van antes que el esmaltado: "Extenciones Softgel" no lleva
+  // la palabra esmaltado, pero si apareciera un "Esmaltado sobre extension",
+  // la foto que corresponde es la de la extension.
+  { patron: /softgel|soft gel|gel ?x/, foto: foto('photo-1607779097040-26e80aa78e66') },
+  { patron: /poligel|poly ?gel|acrilic|esculpid|extenci|extension/, foto: foto('photo-1519014816548-bf5fe059798b') },
+  { patron: /esmaltado permanente|semipermanente|gel/, foto: foto('photo-1604654894610-df63bc536371') },
+  { patron: /esmaltado|esmalte/, foto: foto('photo-1610992015732-2449b76344bc') },
+  { patron: /manicur|pedicur|\bunas?\b/, foto: foto('photo-1632345031435-8727f6897d53') },
 
-  // Piel y cuidado corporal
-  'tratamiento facial': foto('photo-1570172619644-dfd03ed5d881'),
-  depilacion: foto('photo-1519823551278-64ac92734fb1'),
-  'cejas y pestanas': foto('photo-1487412947147-5cebf100ffc2'),
-  maquillaje: foto('photo-1571875257727-256c39da42af'),
-}
+  // --- Cabello ---
+  { patron: /keratina|queratina|botox capilar/, foto: foto('photo-1554519934-e32b1629d9ee') },
+  // Cada alisado con su propia foto: son tres servicios distintos y con una
+  // sola regla generica las tres tarjetas salian identicas.
+  { patron: /organic/, foto: foto('photo-1522337360788-8b13dee7a37e') },
+  { patron: /fotonic|alisad|liso|planchad/, foto: foto('photo-1522338140262-f46f5913618a') },
+  { patron: /coloraci|tinte|mechas|balayage|iluminaci/, foto: foto('photo-1634449571010-02389ed0f9b0') },
+  { patron: /tratamiento|hidrataci|nutric|botox/, foto: foto('photo-1595476108010-b4d1f102b1b1') },
+  { patron: /brushing|secado|blower/, foto: foto('photo-1519699047748-de8e457a634e') },
+  { patron: /peinad|reco?gido|ondas|trenza/, foto: foto('photo-1560869713-7d0a29430803') },
+  { patron: /corte|flequillo|puntas/, foto: foto('photo-1562322140-8baeececf3df') },
+]
 
 /**
- * Respaldo por categoria, para un servicio que no este en el mapa de arriba.
+ * Respaldo por categoria, para un servicio cuyo nombre no active ninguna regla.
  *
  * Son imagenes deliberadamente genericas: representan el area, no un servicio
  * concreto, porque no se sabe cual va a caer aqui.
  */
 const POR_CATEGORIA: Record<ServiceCategoryId, string> = {
   unas: foto('photo-1632345031435-8727f6897d53'),
-  cabello: foto('photo-1560066984-138dadb4c035'),
+  cabello: foto('photo-1633681926022-84c23e8cb2d6'),
   piel: foto('photo-1616394584738-fc6e612e71b9'),
   diagnostico: foto('photo-1560750588-73207b1ef5b8'),
 }
@@ -92,13 +120,15 @@ export const IMAGEN_POR_DEFECTO = foto('photo-1560750588-73207b1ef5b8')
  * con dejarlo en manos de `AppImage`, que caeria en el marcador a rayas.
  *
  * Tres niveles, del mas especifico al mas general:
- *   1. el nombre exacto del servicio,
- *   2. su categoria,
+ *   1. la primera regla cuyo patron aparezca en el nombre,
+ *   2. la categoria,
  *   3. la imagen por defecto.
  */
 export function imagenDeServicio(nombre: string, categoria?: ServiceCategoryId): string {
-  const porNombre = POR_NOMBRE[normalizar(nombre)]
-  if (porNombre) return porNombre
+  const limpio = normalizar(nombre)
+
+  const regla = REGLAS.find(({ patron }) => patron.test(limpio))
+  if (regla) return regla.foto
 
   if (categoria) {
     const porCategoria = POR_CATEGORIA[categoria]
