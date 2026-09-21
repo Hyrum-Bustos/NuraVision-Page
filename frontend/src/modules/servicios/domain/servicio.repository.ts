@@ -20,4 +20,14 @@ export interface ServicioRepository {
    * apuntar a un servicio dado de baja y su nombre debe seguir mostrandose.
    */
   listarPorIds(ids: string[]): Promise<Servicio[]>
+
+  /**
+   * Servicios activos que realiza un profesional, via la tabla puente
+   * `profesional_servicios`. Lista vacia si no tiene ninguno asignado.
+   *
+   * Es el espejo de `listarPorServicio` del modulo profesionales: la misma
+   * tabla puente, leida en el otro sentido. Vive aqui porque devuelve
+   * servicios, y cada modulo es duenio de sus propias entidades.
+   */
+  listarPorProfesional(profesionalId: string): Promise<Servicio[]>
 }

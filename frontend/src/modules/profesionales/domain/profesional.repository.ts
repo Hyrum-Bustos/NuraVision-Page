@@ -21,4 +21,13 @@ export interface ProfesionalRepository {
 
   /** Bloques de atencion de un profesional, ordenados por dia y hora. */
   listarDisponibilidad(profesionalId: string): Promise<Disponibilidad[]>
+
+  /**
+   * Bloques de VARIOS profesionales en una sola consulta.
+   *
+   * Existe para el listado del equipo, que muestra las proximas horas de cada
+   * uno: con `listarDisponibilidad` habria una peticion por profesional, y los
+   * hooks de React no se pueden llamar dentro de un bucle de todas formas.
+   */
+  listarDisponibilidadDeVarios(profesionalIds: string[]): Promise<Disponibilidad[]>
 }
