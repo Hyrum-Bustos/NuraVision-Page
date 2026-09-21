@@ -33,7 +33,16 @@ function claveDe(filtros: FiltrosReservas): string {
  * "cargando" se deriva durante el render comparando ambos, sin escribir estado
  * desde el efecto, y "Actualizar" funciona aunque los filtros no cambien.
  */
-export function useReservasGestion(filtros: FiltrosReservas): EstadoReservasGestion {
+export function useReservasGestion(
+  filtros: FiltrosReservas,
+  /**
+   * Si `false`, no se consulta nada. Existe porque los hooks no se pueden
+   * llamar condicionalmente: la vista tiene que invocar este igual cuando la
+   * sesion no es de personal, y sin esto lanzaria una peticion que la base va
+   * a rechazar y cuyo resultado nadie va a mirar.
+   */
+  habilitado = true,
+): EstadoReservasGestion {
   const clave = claveDe(filtros)
 
   // Cambiarlo fuerza a repetir la consulta aunque los filtros sean los mismos.
@@ -49,6 +58,8 @@ export function useReservasGestion(filtros: FiltrosReservas): EstadoReservasGest
   }>({ clave: '', intento: -1, reservas: [], error: null })
 
   useEffect(() => {
+    if (!habilitado) return
+
     let cancelado = false
 
     const [estado, profesionalId] = clave.split('|')
@@ -74,7 +85,7 @@ export function useReservasGestion(filtros: FiltrosReservas): EstadoReservasGest
     return () => {
       cancelado = true
     }
-  }, [clave, intento])
+  }, [clave, intento, habilitado])
 
   const recargar = useCallback(() => setIntento((n) => n + 1), [])
 
@@ -104,6 +115,20 @@ export function useReservasGestion(filtros: FiltrosReservas): EstadoReservasGest
   }, [])
 
   const alDia = resuelto.clave === clave && resuelto.intento === intento
+
+  // Deshabilitado no es "cargando": no hay nada en camino y la vista debe
+  // poder pintar su propio mensaje en vez de un spinner eterno.
+  if (!habilitado) {
+    return {
+      reservas: [],
+      cargando: false,
+      error: null,
+      confirmando: null,
+      errorConfirmar: null,
+      confirmar,
+      recargar,
+    }
+  }
 
   return {
     // Mientras el resultado corresponda a otros filtros no se muestra nada: es

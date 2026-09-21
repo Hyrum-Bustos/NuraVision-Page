@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '@/modules/auth/ui/useAuth'
 import { useProfesionales } from '@/modules/profesionales/ui/useProfesionales'
 import { useServiciosPorIds } from '@/modules/servicios/ui/useServiciosPorIds'
 import { useProfesionalesPorIds } from '@/modules/profesionales/ui/useProfesionalesPorIds'
@@ -26,6 +28,16 @@ const ETIQUETA_ESTADO: Record<EstadoReserva, string> = {
  * mucho antes de que se note.
  */
 export default function AdminReservas() {
+  const { usuario, cargando: cargandoSesion } = useAuth()
+
+  /**
+   * La marca viene de `app_metadata`, la misma que lee `public.es_staff()` en
+   * 0006. PERO ESTO NO ES LA DEFENSA: quien decide de verdad es la politica de
+   * RLS. Sirve para no pedirle a la base algo que va a rechazar y para poder
+   * explicar por que, en vez de mostrar una tabla vacia sin motivo.
+   */
+  const esStaff = usuario?.esStaff ?? false
+
   const [estado, setEstado] = useState<EstadoReserva | typeof TODOS>(TODOS)
   const [profesionalId, setProfesionalId] = useState<string>(TODOS)
   const [busqueda, setBusqueda] = useState('')
@@ -36,7 +48,7 @@ export default function AdminReservas() {
   }
 
   const { reservas, cargando, error, confirmando, errorConfirmar, confirmar, recargar } =
-    useReservasGestion(filtros)
+    useReservasGestion(filtros, esStaff)
 
   // El desplegable de profesionales sale del equipo completo, no de quienes
   // aparecen en el listado: si no, filtrar por una profesional sin reservas
@@ -70,6 +82,45 @@ export default function AdminReservas() {
 
   function nombreProfesional(id: string): string {
     return profesionales.porId.get(id)?.nombre ?? (profesionales.cargando ? 'Cargando…' : '—')
+  }
+
+  // Las tres salidas van despues de TODOS los hooks: su cantidad y su orden no
+  // pueden cambiar entre renders.
+  if (cargandoSesion) {
+    return <Aviso titulo="Comprobando tu sesión…" />
+  }
+
+  if (!usuario) {
+    return (
+      <Aviso
+        titulo="Necesitas iniciar sesión"
+        detalle="Esta sección es del personal del estudio."
+        accion={{ texto: 'Ir a iniciar sesión', a: '/login' }}
+      />
+    )
+  }
+
+  if (!esStaff) {
+    return (
+      <Aviso
+        titulo="Se requieren permisos de personal del estudio"
+        detalle={
+          <>
+            Tu cuenta (<span className="text-ink">{usuario.email}</span>) no está marcada como
+            personal, así que la base de datos no te deja ver ni gestionar las reservas de la
+            clientela.
+            <br />
+            <br />
+            Para habilitarla hay que poner <code>{'{"es_staff": true}'}</code> en su{' '}
+            <code>app_metadata</code>, lo que solo se puede hacer con la clave de servicio desde
+            el panel de Supabase. Si ya te la marcaron,{' '}
+            <strong className="text-ink">cierra sesión y vuelve a entrar</strong>: el permiso
+            viaja en el token, que se emite al iniciar sesión.
+          </>
+        }
+        accion={{ texto: 'Volver al inicio', a: '/' }}
+      />
+    )
   }
 
   return (
@@ -156,17 +207,16 @@ export default function AdminReservas() {
         </div>
       )}
 
-      {/* Si la sesión no es de personal, la base responde "cero filas" en vez
-          de un error: RLS filtra, no rechaza. Vacío y sin permiso son
-          indistinguibles desde aquí, así que se nombran los dos. */}
+      {/* Llegados aquí la sesión ya es de personal, así que un listado vacío
+          significa lo que parece. El caso de "sin permiso" se atajó arriba.
+          Queda un resquicio: si la marca se puso después de emitir el token,
+          la interfaz la ve y la base no; por eso se menciona el token. */}
       {!cargando && !error && reservas.length === 0 && (
         <div className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center">
           <p className="font-medium text-ink">No hay reservas que mostrar</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-            O no hay ninguna que cumpla estos filtros, o esta sesión no está marcada como
-            personal del estudio. Row Level Security no distingue los dos casos: cuando no hay
-            permiso, filtra las filas en vez de dar error. Se marca con <code>es_staff</code> en{' '}
-            <code>app_metadata</code>, y el cambio se aplica al volver a iniciar sesión.
+            Ninguna reserva cumple estos filtros. Si esperabas ver alguna y acaban de darte
+            permisos de personal, cierra sesión y vuelve a entrar: el permiso viaja en el token.
           </p>
         </div>
       )}
@@ -233,6 +283,34 @@ export default function AdminReservas() {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+/** Pantalla completa para los casos en que no hay listado que mostrar. */
+function Aviso({
+  titulo,
+  detalle,
+  accion,
+}: {
+  titulo: string
+  detalle?: React.ReactNode
+  accion?: { texto: string; a: string }
+}) {
+  return (
+    <div className="mx-auto max-w-2xl px-5 py-16 sm:px-8">
+      <div className="rounded-2xl border border-dashed border-line p-10 text-center">
+        <p className="font-serif-display text-2xl text-ink">{titulo}</p>
+        {detalle && <p className="mx-auto mt-3 max-w-md text-sm text-muted">{detalle}</p>}
+        {accion && (
+          <Link
+            to={accion.a}
+            className="mt-6 inline-block rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink hover:bg-ivory"
+          >
+            {accion.texto}
+          </Link>
+        )}
+      </div>
     </div>
   )
 }
