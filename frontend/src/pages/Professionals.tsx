@@ -1,14 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useAppState } from '@/shared/state/AppState'
+import { useProfesionales } from '@/modules/profesionales/ui/useProfesionales'
 import { AppImage, Button, Kicker } from '@/shared/ui/ui'
 
 export default function Professionals() {
-  const { professionals, setBookingDraft, nextSlotsFor } = useAppState()
+  const { profesionales: professionals, cargando, error } = useProfesionales()
   const navigate = useNavigate()
 
   function handleReservar(professionalId: string) {
-    setBookingDraft(() => ({ professionalId }))
-    navigate('/reservar')
+    navigate(`/profesionales/${professionalId}`)
   }
 
   return (
@@ -16,41 +15,25 @@ export default function Professionals() {
       <Kicker>Equipo</Kicker>
       <h1 className="mt-2 font-serif-display text-5xl text-ink">Profesionales</h1>
 
+      {cargando && <p className="mt-8 text-sm text-muted">Cargando profesionales…</p>}
+      {error && <p role="alert" className="mt-8 text-sm text-muted">No pudimos cargar los profesionales: {error}</p>}
+
       <div className="stagger mt-10 grid gap-6 lg:grid-cols-2">
         {professionals.map((p) => {
-          const nextSlots = nextSlotsFor(p, { count: 3 })
           return (
             <div
               key={p.id}
               className="card-hover flex gap-5 rounded-2xl border border-line-soft bg-paper p-6"
             >
               <AppImage
-                src={p.imageUrl}
+                src={p.avatarUrl ?? undefined}
                 label="Retrato"
-                alt={p.name}
+                alt={p.nombre}
                 className="aspect-[3/4] w-32 shrink-0 rounded-xl sm:w-40"
               />
               <div className="flex flex-1 flex-col">
-                <h2 className="font-serif-display text-2xl text-ink">{p.name}</h2>
-                <p className="text-sm text-muted">{p.role}</p>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">{p.bio}</p>
-
-                <Kicker className="mt-4">Próximas horas</Kicker>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {nextSlots.length === 0 ? (
-                    <span className="text-sm text-muted-light">Sin horas disponibles</span>
-                  ) : (
-                    nextSlots.map((slot) => (
-                      <span
-                        key={`${slot.dateISO}-${slot.time}`}
-                        className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink"
-                      >
-                        {slot.label}
-                      </span>
-                    ))
-                  )}
-                </div>
-
+                <h2 className="font-serif-display text-2xl text-ink">{p.nombre}</h2>
+                <p className="text-sm text-muted">{p.especialidad}</p>
                 <div className="mt-4 flex gap-3">
                   <Button onClick={() => handleReservar(p.id)}>Reservar</Button>
                   <Link
@@ -66,7 +49,7 @@ export default function Professionals() {
         })}
       </div>
 
-      {professionals.length === 0 && (
+      {!cargando && !error && professionals.length === 0 && (
         <p className="mt-10 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
           Todavía no hay profesionales publicados.
         </p>

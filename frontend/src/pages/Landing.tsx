@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useProfesionales } from '@/modules/profesionales/ui/useProfesionales'
 import { useAppState } from '@/shared/state/AppState'
 import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
 import { useServicios } from '@/modules/servicios/ui/useServicios'
@@ -31,7 +32,7 @@ const STEPS = [
 ]
 
 export default function Landing() {
-  const { activeServices: services, professionals, siteContent, nextSlotsFor } = useAppState()
+  const { activeServices: services, siteContent } = useAppState()
 
   /**
    * Los destacados salen de la base, no de los datos de ejemplo.
@@ -47,8 +48,7 @@ export default function Landing() {
    */
   const catalogo = useServicios()
   const featured = catalogo.servicios.slice(0, 4)
-  const firstProfessional = professionals[0]
-  const nextSlot = firstProfessional ? nextSlotsFor(firstProfessional, { count: 1 })[0] : undefined
+  const { profesionales: professionals, cargando: cargandoEquipo, error: errorEquipo } = useProfesionales()
 
   return (
     <div>
@@ -73,7 +73,7 @@ export default function Landing() {
           </div>
           <div className="mt-12 flex gap-10 border-t border-line-soft pt-8">
             <Stat value={String(catalogo.servicios.length || services.length)} label="servicios" />
-            <Stat value={String(professionals.length)} label="profesionales" />
+            <Stat value={cargandoEquipo || errorEquipo ? "—" : String(professionals.length)} label="profesionales" />
             <Stat value="24/7" label="agenda en línea" />
           </div>
         </div>
@@ -85,13 +85,7 @@ export default function Landing() {
             alt="Estudio Nura"
             className="aspect-[4/5] w-full rounded-2xl"
           />
-          {firstProfessional && nextSlot && (
-            <div className="animate-fade-up absolute bottom-6 left-6 w-56 rounded-xl border border-line-soft bg-paper p-4 shadow-sm [animation-delay:320ms]">
-              <Kicker>Próxima hora libre</Kicker>
-              <p className="mt-2 text-sm font-medium text-ink">{firstProfessional.name}</p>
-              <p className="text-sm text-muted">{nextSlot.label.replace(' ', ' · ')}</p>
-            </div>
-          )}
+
         </div>
       </section>
 
@@ -234,17 +228,20 @@ export default function Landing() {
             <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
           </Link>
         </div>
+        {cargandoEquipo && <p className="text-sm text-muted">Cargando profesionales…</p>}
+        {errorEquipo && <p role="alert" className="text-sm text-muted">No pudimos cargar el equipo.</p>}
+        {!cargandoEquipo && !errorEquipo && professionals.length === 0 && <p className="text-sm text-muted">Todavía no hay profesionales publicados.</p>}
         <div className="stagger grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {professionals.map((p) => (
             <Link key={p.id} to={`/profesionales/${p.id}`} className="zoom-media group">
               <AppImage
-                src={p.imageUrl}
+                src={p.avatarUrl ?? undefined}
                 label="Retrato"
-                alt={p.name}
+                alt={p.nombre}
                 className="aspect-[3/4] w-full rounded-2xl"
               />
-              <p className="mt-3 font-serif-display text-lg text-ink">{p.name}</p>
-              <p className="text-sm text-muted">{p.role}</p>
+              <p className="mt-3 font-serif-display text-lg text-ink">{p.nombre}</p>
+              <p className="text-sm text-muted">{p.especialidad}</p>
             </Link>
           ))}
         </div>

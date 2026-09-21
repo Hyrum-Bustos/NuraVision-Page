@@ -21,6 +21,22 @@ export class SupabaseServicioRepository implements ServicioRepository {
     return (data ?? []).map(toServicio)
   }
 
+  async listarPorProfesional(profesionalId: string): Promise<Servicio[]> {
+    const id = Number(profesionalId)
+    if (!profesionalId.trim() || !Number.isInteger(id)) return []
+
+    const { data: vinculos, error } = await supabase
+      .from('profesional_servicios')
+      .select('servicio_id')
+      .eq('profesional_id', id)
+    if (error) throw new Error(`No se pudieron cargar los servicios: ${error.message}`)
+
+    const ids = (vinculos ?? []).map((v) => String(v.servicio_id))
+    if (ids.length === 0) return []
+    const servicios = await this.listarPorIds(ids)
+    return servicios.filter((s) => s.activo).sort((a, b) => a.nombre.localeCompare(b.nombre))
+  }
+
   async obtenerPorId(id: string): Promise<Servicio | null> {
     // La columna es bigint: un id no numerico nunca va a existir, y consultarlo
     // haria que PostgREST respondiera un 400. Los ids del prototipo eran slugs

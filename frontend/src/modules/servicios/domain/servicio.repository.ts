@@ -11,6 +11,9 @@ export interface ServicioRepository {
   /** Servicios activos, ordenados por nombre. */
   listarActivos(): Promise<Servicio[]>
 
+  /** Servicios activos asignados a un profesional. */
+  listarPorProfesional(profesionalId: string): Promise<Servicio[]>
+
   /** `null` si no existe (no es un error: es una respuesta valida). */
   obtenerPorId(id: string): Promise<Servicio | null>
 
