@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom'
 import { useAppState } from '@/shared/state/AppState'
 import { categoryLabel } from '@/modules/servicios/domain/serviceCategories'
 import { useServicios } from '@/modules/servicios/ui/useServicios'
+import { useEquipoConAgenda } from '@/modules/profesionales/ui/useEquipoConAgenda'
 import { imagenDeServicio } from '@/modules/servicios/ui/servicio.imagenes'
 import { AppImage, Kicker, LinkButton } from '@/shared/ui/ui'
 import { Reveal } from '@/shared/ui/Reveal'
 import { formatPrice } from '@/shared/lib/format'
+import { getNextAvailableSlots } from '@/shared/lib/availability'
 
 const STEPS = [
   {
@@ -31,7 +33,9 @@ const STEPS = [
 ]
 
 export default function Landing() {
-  const { activeServices: services, professionals, siteContent, nextSlotsFor } = useAppState()
+  // `bookings` sigue siendo local: es lo unico que hay para marcar las horas
+  // ya tomadas al calcular la proxima libre.
+  const { activeServices: services, siteContent, bookings } = useAppState()
 
   /**
    * Los destacados salen de la base, no de los datos de ejemplo.
@@ -47,8 +51,21 @@ export default function Landing() {
    */
   const catalogo = useServicios()
   const featured = catalogo.servicios.slice(0, 4)
+  /**
+   * El equipo sale de la base, igual que los destacados.
+   *
+   * Se usa `useEquipoConAgenda` y no `useProfesionales` a proposito: trae
+   * ademas el horario semanal, que es lo que permite seguir mostrando la
+   * tarjeta de "proxima hora libre". Con la entidad de dominio a secas habria
+   * que quitarla, porque sin agenda no hay proxima hora que calcular.
+   */
+  const equipo = useEquipoConAgenda()
+  const professionals = equipo.equipo
+
   const firstProfessional = professionals[0]
-  const nextSlot = firstProfessional ? nextSlotsFor(firstProfessional, { count: 1 })[0] : undefined
+  const nextSlot = firstProfessional
+    ? getNextAvailableSlots(firstProfessional, bookings, 1)[0]
+    : undefined
 
   return (
     <div>
@@ -73,7 +90,12 @@ export default function Landing() {
           </div>
           <div className="mt-12 flex gap-10 border-t border-line-soft pt-8">
             <Stat value={String(catalogo.servicios.length || services.length)} label="servicios" />
-            <Stat value={String(professionals.length)} label="profesionales" />
+            {/* Mientras carga se muestra un guion en vez de un 0, que se leeria
+                como "el estudio no tiene profesionales". */}
+            <Stat
+              value={equipo.cargando || equipo.error ? '—' : String(professionals.length)}
+              label="profesionales"
+            />
             <Stat value="24/7" label="agenda en línea" />
           </div>
         </div>
@@ -234,6 +256,26 @@ export default function Landing() {
             <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
           </Link>
         </div>
+        {equipo.cargando && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i}>
+                <div className="aspect-[3/4] w-full animate-pulse rounded-2xl bg-line-soft" />
+                <div className="mt-3 h-5 w-28 animate-pulse rounded bg-line-soft" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Igual que con los destacados: un error de carga no se muestra en la
+            portada, porque no hay nada que la visitante pueda hacer y el resto
+            de la pagina sigue sirviendo. */}
+        {!equipo.cargando && !equipo.error && professionals.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+            Todavía no hay profesionales publicados.
+          </p>
+        )}
+
         <div className="stagger grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {professionals.map((p) => (
             <Link key={p.id} to={`/profesionales/${p.id}`} className="zoom-media group">
