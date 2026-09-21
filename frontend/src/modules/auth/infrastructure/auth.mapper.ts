@@ -21,6 +21,14 @@ export const META_TELEFONO = 'telefono'
 export const APP_META_ES_STAFF = 'es_staff'
 
 /**
+ * Clave que vincula la cuenta con su ficha de `profesionales`.
+ *
+ * Se guarda como texto o como numero segun quien la escriba (panel de
+ * Supabase, API de administracion o SQL), asi que el mapper acepta ambos.
+ */
+export const APP_META_PROFESIONAL_ID = 'profesional_id'
+
+/**
  * `user_metadata` es Json libre: lo escribe el cliente y nadie valida su forma.
  * Cualquier cosa que no sea un texto con contenido se trata como ausente, en
  * vez de dejar que un numero o un objeto llegue a la interfaz tipado como
@@ -42,6 +50,20 @@ function esMarcaVerdadera(valor: unknown): boolean {
   return valor === true || valor === 'true'
 }
 
+/**
+ * El id de la ficha puede llegar como numero o como texto. Se normaliza a
+ * texto, que es como viaja el id en todo el dominio y en las rutas. Un valor
+ * vacio o de otro tipo se trata como "sin vincular".
+ */
+function idOpcional(valor: unknown): string | null {
+  if (typeof valor === 'number' && Number.isInteger(valor)) return String(valor)
+  if (typeof valor === 'string') {
+    const limpio = valor.trim()
+    return limpio === '' ? null : limpio
+  }
+  return null
+}
+
 /** Usuario de Supabase -> entidad de dominio. */
 export function toUsuarioAuth(user: User): UsuarioAuth {
   const meta = user.user_metadata as Record<string, unknown> | null
@@ -57,5 +79,6 @@ export function toUsuarioAuth(user: User): UsuarioAuth {
     nombre: textoOpcional(meta?.[META_NOMBRE]),
     telefono: textoOpcional(meta?.[META_TELEFONO]),
     esStaff: esMarcaVerdadera(metaApp?.[APP_META_ES_STAFF]),
+    profesionalId: idOpcional(metaApp?.[APP_META_PROFESIONAL_ID]),
   }
 }

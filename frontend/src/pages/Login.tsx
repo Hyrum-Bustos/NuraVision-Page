@@ -19,8 +19,10 @@ export default function Login() {
 
   function enterAs(role: Role) {
     login(role)
+    // Administracion entra directo al listado de reservas: es lo unico del
+    // panel que lee datos reales, y el resto sigue con los de ejemplo.
     if (role === 'profesional') navigate('/profesional')
-    else if (role === 'administrador') navigate('/admin')
+    else if (role === 'administrador') navigate('/admin/reservas')
     else navigate('/')
   }
 
