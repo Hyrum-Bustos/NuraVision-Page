@@ -14,11 +14,14 @@ export default function ProHistory() {
    * Las reservas se leen con el repositorio de gestion del modulo admin,
    * filtradas por esta ficha.
    *
-   * NO es un atajo comodo: hoy es la unica via que existe. Las politicas dan
-   * lectura de `reservas` a quien tiene `es_staff` (0006) o a la clienta
-   * duenia de la fila (0004), y no hay ninguna pensada para "el profesional
-   * que atiende esta hora". Mientras no la haya, una cuenta de profesional sin
-   * `es_staff` va a ver la tabla vacia, y el aviso de abajo lo explica.
+   * Se reutiliza el repositorio del modulo admin porque la consulta es la
+   * misma —reservas filtradas por profesional—; lo que cambia es QUIEN puede
+   * verlas, y eso lo decide la base, no este archivo.
+   *
+   * Desde 0007 una cuenta con `profesional_id` en su `app_metadata` lee las
+   * horas que le toca atender, sin necesidad de `es_staff`. Sin ese vinculo
+   * —por ejemplo con una ficha elegida a mano en el selector— la base no
+   * devuelve nada, y el aviso de abajo lo explica.
    */
   const reservas = useReservasGestion({ profesionalId }, profesionalId !== undefined)
 
@@ -64,9 +67,10 @@ export default function ProHistory() {
         <div className="mt-8 rounded-2xl border border-dashed border-line p-10 text-center">
           <p className="font-medium text-ink">No hay reservas que mostrar</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-            O todavía no tiene ninguna, o esta sesión no tiene permiso para leerlas. Hoy solo
-            pueden verlas las cuentas marcadas con <code>es_staff</code>: falta una política
-            pensada para que cada profesional lea las horas que atiende.
+            O todavía no tiene ninguna, o esta sesión no tiene permiso para leerlas. La base
+            entrega las horas de quien tenga <code>profesional_id</code> en su{' '}
+            <code>app_metadata</code>; elegir una ficha en el selector decide qué panel se
+            muestra, pero no otorga ese permiso.
           </p>
         </div>
       )}
