@@ -42,7 +42,7 @@ import ProServices from '@/pages/professional/ProServices'
 import ProProfile from '@/pages/professional/ProProfile'
 
 import AdminDashboard from '@/pages/admin/AdminDashboard'
-import AdminBookings from '@/pages/admin/AdminBookings'
+import AdminReservas from '@/modules/admin/ui/AdminReservas'
 import AdminClients from '@/pages/admin/AdminClients'
 import AdminUsers from '@/pages/admin/AdminUsers'
 import AdminProfessionals from '@/pages/admin/AdminProfessionals'
@@ -129,7 +129,7 @@ export default function App() {
                   }
                 >
                   <Route path="admin" element={<AdminDashboard />} />
-                  <Route path="admin/reservas" element={<AdminBookings />} />
+                  <Route path="admin/reservas" element={<AdminReservas />} />
                   <Route path="admin/clientes" element={<AdminClients />} />
                   <Route path="admin/usuarios" element={<AdminUsers />} />
                   <Route path="admin/profesionales" element={<AdminProfessionals />} />

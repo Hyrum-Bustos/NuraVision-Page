@@ -103,6 +103,27 @@ export class SupabaseProfesionalRepository implements ProfesionalRepository {
 
     return (data ?? []).map(toDisponibilidad)
   }
+
+  async listarDisponibilidadDeVarios(profesionalIds: string[]): Promise<Disponibilidad[]> {
+    const ids = profesionalIds
+      .map(aIdNumerico)
+      .filter((id): id is number => id !== null)
+
+    if (ids.length === 0) return []
+
+    const { data, error } = await supabase
+      .from(TABLA_DISPONIBILIDAD)
+      .select('*')
+      .in('profesional_id', ids)
+      .order('dia_semana', { ascending: true })
+      .order('hora_inicio', { ascending: true })
+
+    if (error) {
+      throw new Error(`No se pudo cargar la disponibilidad: ${error.message}`)
+    }
+
+    return (data ?? []).map(toDisponibilidad)
+  }
 }
 
 /** Instancia lista para usar; la app no necesita mas de una. */

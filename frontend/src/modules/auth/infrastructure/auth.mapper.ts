@@ -12,6 +12,15 @@ export const META_NOMBRE = 'nombre'
 export const META_TELEFONO = 'telefono'
 
 /**
+ * Clave que marca al personal del estudio dentro de `app_metadata`.
+ *
+ * Tiene que coincidir letra por letra con la que lee `public.es_staff()` en
+ * 0006_admin_staff_policy.sql. Si una de las dos cambia y la otra no, la
+ * interfaz y la base dejan de estar de acuerdo sin que nada avise.
+ */
+export const APP_META_ES_STAFF = 'es_staff'
+
+/**
  * `user_metadata` es Json libre: lo escribe el cliente y nadie valida su forma.
  * Cualquier cosa que no sea un texto con contenido se trata como ausente, en
  * vez de dejar que un numero o un objeto llegue a la interfaz tipado como
@@ -23,9 +32,20 @@ function textoOpcional(valor: unknown): string | null {
   return limpio === '' ? null : limpio
 }
 
+/**
+ * `app_metadata` tambien es Json libre. Se acepta el booleano `true` y el
+ * texto "true", porque segun como se escriba la marca (panel de Supabase,
+ * API de administracion, SQL) puede llegar de las dos formas. Cualquier otra
+ * cosa es "no es personal": ante la duda, se niega.
+ */
+function esMarcaVerdadera(valor: unknown): boolean {
+  return valor === true || valor === 'true'
+}
+
 /** Usuario de Supabase -> entidad de dominio. */
 export function toUsuarioAuth(user: User): UsuarioAuth {
   const meta = user.user_metadata as Record<string, unknown> | null
+  const metaApp = user.app_metadata as Record<string, unknown> | null
 
   return {
     id: user.id,
@@ -36,5 +56,6 @@ export function toUsuarioAuth(user: User): UsuarioAuth {
     email: user.email ?? '',
     nombre: textoOpcional(meta?.[META_NOMBRE]),
     telefono: textoOpcional(meta?.[META_TELEFONO]),
+    esStaff: esMarcaVerdadera(metaApp?.[APP_META_ES_STAFF]),
   }
 }

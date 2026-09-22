@@ -17,6 +17,19 @@ export interface UsuarioAuth {
   /** Nombre que la persona dio al registrarse, si lo dio. */
   nombre: string | null
   telefono: string | null
+  /**
+   * Si la cuenta pertenece al personal del estudio.
+   *
+   * Sale de `app_metadata`, que solo se escribe con la service_role key: por
+   * eso se puede confiar en ella. Su gemela `user_metadata` —de donde salen el
+   * nombre y el telefono de arriba— la puede editar cualquiera con su propia
+   * sesion, y usarla aqui dejaria que una clienta se ascendiera sola.
+   *
+   * ES UNA PISTA PARA LA INTERFAZ, NO UNA DEFENSA. Quien de verdad decide es
+   * la politica de 0006_admin_staff_policy.sql, que lee la misma marca del
+   * JWT. Esto solo sirve para no mostrar pantallas que van a fallar.
+   */
+  esStaff: boolean
 }
 
 /** Lo minimo para entrar. */

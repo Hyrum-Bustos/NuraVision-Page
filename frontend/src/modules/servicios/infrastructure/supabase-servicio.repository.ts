@@ -4,6 +4,7 @@ import type { Servicio } from '../domain/servicio.types'
 import { toServicio } from './servicio.mapper'
 
 const TABLA = 'servicios'
+const TABLA_PUENTE = 'profesional_servicios'
 
 /** Implementacion de `ServicioRepository` sobre Supabase. */
 export class SupabaseServicioRepository implements ServicioRepository {
@@ -55,6 +56,38 @@ export class SupabaseServicioRepository implements ServicioRepository {
     if (numericos.length === 0) return []
 
     const { data, error } = await supabase.from(TABLA).select('*').in('id', numericos)
+
+    if (error) {
+      throw new Error(`No se pudieron cargar los servicios: ${error.message}`)
+    }
+
+    return (data ?? []).map(toServicio)
+  }
+
+  async listarPorProfesional(profesionalId: string): Promise<Servicio[]> {
+    // Mismo descarte que en listarPorIds: un id del prototipo no es entero y
+    // mandarlo a PostgREST daria un 400 en vez de una lista vacia.
+    const idProfesional = Number(profesionalId)
+    if (!profesionalId.trim() || !Number.isInteger(idProfesional)) return []
+
+    const { data: vinculos, error: errorVinculos } = await supabase
+      .from(TABLA_PUENTE)
+      .select('servicio_id')
+      .eq('profesional_id', idProfesional)
+
+    if (errorVinculos) {
+      throw new Error(`No se pudieron cargar los servicios: ${errorVinculos.message}`)
+    }
+
+    const ids = (vinculos ?? []).map((v) => v.servicio_id)
+    if (ids.length === 0) return []
+
+    const { data, error } = await supabase
+      .from(TABLA)
+      .select('*')
+      .in('id', ids)
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
 
     if (error) {
       throw new Error(`No se pudieron cargar los servicios: ${error.message}`)
