@@ -267,15 +267,26 @@ export default function Landing() {
           </div>
         )}
 
-        {/* Igual que con los destacados: un error de carga no se muestra en la
-            portada, porque no hay nada que la visitante pueda hacer y el resto
-            de la pagina sigue sirviendo. */}
+        {/* El fallo se dice, no se esconde. Antes se ocultaba con el argumento
+            de que la visitante no puede hacer nada al respecto, pero eso deja
+            un hueco mudo justo bajo el titulo "Nuestro equipo": no se
+            distingue de un estudio sin profesionales, y quien reporte el
+            problema no tendra nada que contar. */}
+        {!equipo.cargando && equipo.error && (
+          <p role="alert" className="rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
+            No pudimos cargar el equipo: {equipo.error}
+          </p>
+        )}
+
         {!equipo.cargando && !equipo.error && professionals.length === 0 && (
           <p className="rounded-2xl border border-dashed border-line p-10 text-center text-sm text-muted">
             Todavía no hay profesionales publicados.
           </p>
         )}
 
+        {/* La rejilla solo aparece cuando hay algo que poner: con error o
+            cargando, pintar un grid vacio debajo del aviso sobra. */}
+        {!equipo.cargando && !equipo.error && professionals.length > 0 && (
         <div className="stagger grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {professionals.map((p) => (
             <Link key={p.id} to={`/profesionales/${p.id}`} className="zoom-media group">
@@ -290,6 +301,7 @@ export default function Landing() {
             </Link>
           ))}
         </div>
+        )}
       </section>
       </Reveal>
 
