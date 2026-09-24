@@ -30,6 +30,26 @@ npm run lint                            # oxlint
 referencias (`"files": []`), así que `npx tsc --noEmit` a secas no compila ningún
 archivo y termina en 0 aunque el código esté roto: es un falso positivo.
 
+# OpenSpec
+
+El repositorio usa [OpenSpec](https://github.com/Fission-AI/OpenSpec) para el
+trabajo guiado por especificaciones. La CLI esta fijada como dependencia de
+desarrollo en el `package.json` de la raiz, asi que llega con el repositorio:
+
+```bash
+npm install          # desde la raiz, una sola vez tras clonar o hacer pull
+npx openspec list    # comprobar que responde
+```
+
+No hace falta instalarla a mano ni de forma global.
+
+Las especificaciones viven en `openspec/specs/` y las propuestas en curso en
+`openspec/changes/`. Los comandos `/opsx:*` y las skills de `.claude/` estan
+versionados, de modo que todo el equipo dispone de ellos al hacer pull.
+
+`.claude/settings.local.json` queda fuera del control de versiones a proposito:
+son los permisos de cada maquina, no configuracion compartida.
+
 # Reporte al finalizar una tarea
 
 Al terminar cualquier tarea, entrega un resumen breve y claro con esta estructura:
