@@ -52,14 +52,22 @@ function esMarcaVerdadera(valor: unknown): boolean {
 
 /**
  * El id de la ficha puede llegar como numero o como texto. Se normaliza a
- * texto, que es como viaja el id en todo el dominio y en las rutas. Un valor
- * vacio o de otro tipo se trata como "sin vincular".
+ * texto, que es como viaja el id en todo el dominio y en las rutas.
+ *
+ * Solo se acepta un entero, y esa exigencia no es cosmetica: TIENE QUE
+ * COINCIDIR CON LO QUE HACE `public.mi_profesional_id()` en 0007, que descarta
+ * con `~ '^[0-9]+$'` cualquier marca que no sea un entero. Si aqui se aceptara
+ * un `"abc"`, la interfaz llevaria a esa cuenta al panel de profesional
+ * mientras la base no le concede ni una fila: un panel vacio sin explicacion.
+ * Ante una marca mal escrita, las dos capas dicen lo mismo: sin vincular.
  */
+const SOLO_DIGITOS = /^\d+$/
+
 function idOpcional(valor: unknown): string | null {
-  if (typeof valor === 'number' && Number.isInteger(valor)) return String(valor)
+  if (typeof valor === 'number') return Number.isInteger(valor) ? String(valor) : null
   if (typeof valor === 'string') {
     const limpio = valor.trim()
-    return limpio === '' ? null : limpio
+    return SOLO_DIGITOS.test(limpio) ? limpio : null
   }
   return null
 }
