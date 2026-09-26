@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Professional } from '@/shared/types'
 import { useAuth } from '@/modules/auth/ui/useAuth'
 import { obtenerDisponibilidad, obtenerProfesionales } from '../application'
+import type { Disponibilidad } from '../domain/disponibilidad.types'
 import type { Profesional } from '../domain/profesional.types'
 import { toWeeklyAvailability } from '../infrastructure/disponibilidad.mapper'
 import { profesionalRepository } from '../infrastructure/supabase-profesional.repository'
@@ -45,11 +46,28 @@ interface EstadoMiFicha {
   /** Todo el equipo, para poder ofrecer el selector. */
   equipo: Profesional[]
   cargando: boolean
+  /**
+   * `true` mientras el horario de la ficha ya resuelta todavia no ha llegado.
+   *
+   * Importa distinguirlo de `cargando`: la ficha y su agenda son dos consultas,
+   * y entre una y otra `ficha.availability` es una semana cerrada. Sin este
+   * indicador, el panel de disponibilidad mostraria «todos los dias libres»
+   * como si fuera el horario de verdad.
+   */
+  cargandoAgenda: boolean
   error: string | null
   /** `true` si el vinculo viene de `app_metadata` y no de una eleccion local. */
   vinculoDeclarado: boolean
   /** Cambia la ficha elegida a mano. Se ignora si hay vinculo declarado. */
   elegir: (profesionalId: string | null) => void
+  /**
+   * Adopta un horario recien guardado como el vigente.
+   *
+   * Evita volver a consultar la base tras guardar: la respuesta del UPSERT ya
+   * trae las filas tal como quedaron, que es una fuente mejor que el borrador
+   * local —incluye lo que la base haya normalizado—.
+   */
+  aplicarHorario: (bloques: Disponibilidad[]) => void
 }
 
 /**
@@ -126,6 +144,12 @@ export function useMiFichaProfesional(): EstadoMiFicha {
     }
   }, [profesional])
 
+  const aplicarHorario = useCallback((nuevos: Disponibilidad[]) => {
+    const id = nuevos[0]?.profesionalId
+    if (id === undefined) return
+    setBloques({ id, horario: toWeeklyAvailability(nuevos) })
+  }, [])
+
   const elegir = useCallback(
     (profesionalId: string | null) => {
       // Un vinculo declarado no se puede sobrescribir desde el navegador: seria
@@ -160,8 +184,10 @@ export function useMiFichaProfesional(): EstadoMiFicha {
     profesional,
     equipo,
     cargando: cargandoEquipo,
+    cargandoAgenda: profesional !== undefined && bloques.id !== profesional.id,
     error,
     vinculoDeclarado,
     elegir,
+    aplicarHorario,
   }
 }
