@@ -1,8 +1,8 @@
 import { formatDayMonthShort } from '@/shared/lib/format'
+import { StatusBadge } from '@/shared/ui/ui'
 import { useMiFichaProfesional } from '@/modules/profesionales/ui/useMiFichaProfesional'
 import { FichaActiva, SelectorDeFicha } from '@/modules/profesionales/ui/SelectorDeFicha'
 import { useReservasGestion } from '@/modules/admin/ui/useReservasGestion'
-import { EstadoBadge } from '@/modules/admin/ui/EstadoBadge'
 import { useServiciosPorIds } from '@/modules/servicios/ui/useServiciosPorIds'
 
 export default function ProHistory() {
@@ -107,7 +107,7 @@ export default function ProHistory() {
                         (servicios.cargando ? 'Cargando…' : '—')}
                     </td>
                     <td className="px-6 py-4">
-                      <EstadoBadge estado={r.estado} />
+                      <StatusBadge status={r.estado} />
                     </td>
                   </tr>
                 )
