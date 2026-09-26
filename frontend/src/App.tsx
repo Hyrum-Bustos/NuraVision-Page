@@ -34,6 +34,7 @@ import BookingDetail from '@/pages/BookingDetail'
 import AIAnalysis from '@/pages/AIAnalysis'
 import Profile from '@/pages/Profile'
 
+import { ProShell } from '@/pages/professional/ProShell'
 import ProDashboard from '@/pages/professional/ProDashboard'
 import ProAgenda from '@/pages/professional/ProAgenda'
 import ProAvailability from '@/pages/professional/ProAvailability'
@@ -102,7 +103,7 @@ export default function App() {
               <Route element={<RequireRole role="profesional" />}>
                 <Route
                   element={
-                    <DashboardShell
+                    <ProShell
                       sectionLabel="Panel profesional"
                       userSubtitle="Nail artist"
                       navItems={PROFESSIONAL_NAV}

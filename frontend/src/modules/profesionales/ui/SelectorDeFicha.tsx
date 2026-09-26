@@ -1,4 +1,5 @@
 import { Avatar, Button, Kicker } from '@/shared/ui/ui'
+import { initialsFromName } from '@/shared/lib/format'
 import type { Profesional } from '../domain/profesional.types'
 
 /**
@@ -73,7 +74,7 @@ export function SelectorDeFicha({
                   className="h-11 w-11 shrink-0 rounded-full object-cover"
                 />
               ) : (
-                <Avatar initials={p.nombre.slice(0, 2).toUpperCase()} />
+                <Avatar initials={initialsFromName(p.nombre)} />
               )}
               <div className="min-w-0">
                 <p className="truncate font-medium text-ink">{p.nombre}</p>
